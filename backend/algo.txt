@@ -1,0 +1,307 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+package "domain.model" {
+    class Venta {
+        - Integer idVenta
+        - String nombreCliente
+        - LocalDateTime fechaVenta
+        - Double total
+        - Double descuentoTotal
+        - List<DetalleVenta> detalleVenta
+        - Boolean estadoVenta
+        + Venta()
+        + Venta(Integer, String, LocalDateTime, List<DetalleVenta>)
+        + {getter/setter methods}
+    }
+    
+    class DetalleVenta {
+        - Double total
+        - Integer cantidad
+        - Double precioUnitarioRepuesto
+        - Double precioSugeridoRepuesto
+        - Double descuento
+        - Integer idRepuesto
+        - Double costoRepuesto
+        + DetalleVenta()
+        + DetalleVenta(Integer, Double, Double, Integer, Double)
+        + {getter/setter methods}
+    }
+    
+    class Repuesto {
+        - Integer idRepuesto
+        - Integer stockRepuesto
+        - String nombreRepuesto
+        - Double costoRepuesto
+        - Double precioSugerido
+        + Repuesto()
+        + Repuesto(Integer, Integer)
+        + decreaseStockRepuesto(Integer): boolean
+        + encreaseStockRepuesto(Integer): boolean
+        + {getter/setter methods}
+    }
+}
+
+package "application.port.in" {
+    interface CreateVentaUseCase {
+        + save(Venta): Venta
+    }
+    
+    interface UpdateVentaUseCase {
+        + update(Integer, Venta): Venta
+    }
+    
+    interface FindVentaUseCase {
+        + findById(Integer): Optional<Venta>
+        + findAll(): List<Venta>
+    }
+    
+    interface DeleteVentaUseCase {
+        + delete(Integer): void
+    }
+    
+    interface RepuestoUseCase {
+        + findAll(): List<Repuesto>
+        + findById(Integer): Optional<Repuesto>
+    }
+}
+
+package "application.port.out" {
+    interface VentaPersistantPort {
+        + save(Venta): Venta
+        + findById(Integer): Optional<Venta>
+        + findAll(): List<Venta>
+    }
+    
+    interface RepuestoPersistantPort {
+        + findById(Integer): Optional<Repuesto>
+        + save(Repuesto): Repuesto
+        + findAll(): List<Repuesto>
+    }
+}
+
+package "application.service" {
+    class ServicioVenta {
+        - VentaPersistantPort ventaPersistantPort
+        - RepuestoPersistantPort repuestoPersistantPort
+        + ServicioVenta(VentaPersistantPort, RepuestoPersistantPort)
+        + save(Venta): Venta
+        + update(Integer, Venta): Venta
+        + findById(Integer): Optional<Venta>
+        + findAll(): List<Venta>
+        + delete(Integer): void
+    }
+    
+    class VentaRepuestoService {
+        - RepuestoPersistantPort persistencetPort
+        + VentaRepuestoService(RepuestoPersistantPort)
+        + findAll(): List<Repuesto>
+        + findById(Integer): Optional<Repuesto>
+    }
+}
+
+package "infrastructure.adapter.in.web.controller" {
+    class VentaController {
+        - CreateVentaUseCase createVentaUseCase
+        - UpdateVentaUseCase updateVentaUseCase
+        - FindVentaUseCase findVentaUseCase
+        - DeleteVentaUseCase deleteVentaUseCase
+        - VentaMapper ventaMapper
+        + VentaController(...)
+        + registrarVenta(VentaRequestDTO): ResponseEntity<Map>
+        + updateVenta(VentaRequestDTO): ResponseEntity<Map>
+        + findAllVenta(): List<Venta>
+        + findById(Integer): Optional<Venta>
+        + delete(Integer): boolean
+    }
+    
+    class VentaRepuestoController {
+        - VentaRepuestoService ventaRepuestoService
+        + VentaRepuestoController(VentaRepuestoService)
+        + findAll(): List<Repuesto>
+        + findById(Integer): Optional<Repuesto>
+    }
+}
+
+package "infrastructure.adapter.in.web.dto" {
+    class VentaRequestDTO {
+        - Integer idVenta
+        - String nombreCliente
+        - Double total
+        - Double descuentoTotal
+        - List<DetalleVentaDTO> detalleVenta
+        + {getter/setter methods}
+    }
+    
+    class DetalleVentaDTO {
+        - Double total
+        - Integer cantidad
+        - Double precioUnitarioRepuesto
+        - Double precioSugeridoRepuesto
+        - Integer idRepuesto
+        - Double costoRepuesto
+        + {getter/setter methods}
+    }
+}
+
+package "infrastructure.adapter.in.web.mapper" {
+    class VentaMapper {
+        + toDomain(VentaRequestDTO): Venta
+        - toDetalleVentaDomain(DetalleVentaDTO): DetalleVenta
+    }
+}
+
+package "infrastructure.adapter.out.persistence.entity" {
+    class VentaEntity {
+        - Integer idVenta
+        - String nombreCliente
+        - LocalDateTime fechaVenta
+        - Double total
+        - Double descuentoTotal
+        - Boolean estadoVenta
+        - List<DetalleVentaEntity> detalleVenta
+        + {getter/setter methods}
+    }
+    
+    class DetalleVentaEntity {
+        - Integer idDetalleVenta
+        - Double total
+        - Integer cantidad
+        - Double precioUnitarioRepuesto
+        - Double precioSugeridoRepuesto
+        - Double descuento
+        - Integer idRepuesto
+        - Double costoRepuesto
+        - VentaEntity venta
+        + {getter/setter methods}
+    }
+    
+    class RepuestoEntity {
+        - Integer idRepuesto
+        - String nombreRepuesto
+        - Integer stockRepuesto
+        - Double costoRepuesto
+        - Double precioSugerido
+        - Boolean estadoRepuesto
+        + {getter/setter methods}
+    }
+}
+
+package "infrastructure.adapter.out.persistence.mapper" {
+    class VentaEntityMapper {
+        - DetalleVentaEntityMapper detalleVentaEntityMapper
+        + VentaEntityMapper(DetalleVentaEntityMapper)
+        + toEntity(Venta): VentaEntity
+        + toDomain(VentaEntity): Venta
+    }
+    
+    class DetalleVentaEntityMapper {
+        + toEntity(DetalleVenta): DetalleVentaEntity
+        + toDomain(DetalleVentaEntity): DetalleVenta
+    }
+    
+    class RepuestoEntityMapper {
+        + toEntity(Repuesto): RepuestoEntity
+        + toDomain(RepuestoEntity): Repuesto
+    }
+}
+
+package "infrastructure.adapter.out.persistence.repository" {
+    interface VentaRepository {
+        + save(VentaEntity): VentaEntity
+        + findById(Integer): Optional<VentaEntity>
+        + findAll(): List<VentaEntity>
+    }
+    
+    interface RepuestoRepository {
+        + save(RepuestoEntity): RepuestoEntity
+        + findById(Integer): Optional<RepuestoEntity>
+        + findAll(): List<RepuestoEntity>
+    }
+}
+
+package "infrastructure.adapter.out.persistence.adapter" {
+    class VentaRepositoryAdapter {
+        - VentaRepository ventaRepository
+        - VentaEntityMapper ventaEntityMapper
+        - DetalleVentaEntityMapper detalleVentaEntityMapper
+        + VentaRepositoryAdapter(...)
+        + save(Venta): Venta
+        + findById(Integer): Optional<Venta>
+        + findAll(): List<Venta>
+    }
+    
+    class VentaRepuestoRepositoryAdapter {
+        - RepuestoRepository repuestoRepository
+        - RepuestoEntityMapper repuestoEntityMapper
+        + VentaRepuestoRepositoryAdapter(...)
+        + save(Repuesto): Repuesto
+        + findById(Integer): Optional<Repuesto>
+        + findAll(): List<Repuesto>
+    }
+}
+
+' Relaciones Domain
+Venta "1" *-- "many" DetalleVenta
+
+' Relaciones Entity
+VentaEntity "1" *-- "many" DetalleVentaEntity : cascade
+
+' Relaciones DTOs
+VentaRequestDTO "1" *-- "many" DetalleVentaDTO
+
+' Relaciones Services con Ports
+ServicioVenta ..|> CreateVentaUseCase
+ServicioVenta ..|> UpdateVentaUseCase
+ServicioVenta ..|> FindVentaUseCase
+ServicioVenta ..|> DeleteVentaUseCase
+ServicioVenta --> VentaPersistantPort
+ServicioVenta --> RepuestoPersistantPort
+
+VentaRepuestoService ..|> RepuestoUseCase
+VentaRepuestoService --> RepuestoPersistantPort
+
+' Relaciones Controllers
+VentaController --> CreateVentaUseCase
+VentaController --> UpdateVentaUseCase
+VentaController --> FindVentaUseCase
+VentaController --> DeleteVentaUseCase
+VentaController --> VentaMapper
+
+VentaRepuestoController --> RepuestoUseCase
+
+' Relaciones Mappers Web
+VentaMapper ..> VentaRequestDTO
+VentaMapper ..> DetalleVentaDTO
+VentaMapper ..> Venta
+VentaMapper ..> DetalleVenta
+
+' Relaciones Adapters
+VentaRepositoryAdapter ..|> VentaPersistantPort
+VentaRepositoryAdapter --> VentaRepository
+VentaRepositoryAdapter --> VentaEntityMapper
+VentaRepositoryAdapter --> DetalleVentaEntityMapper
+
+VentaRepuestoRepositoryAdapter ..|> RepuestoPersistantPort
+VentaRepuestoRepositoryAdapter --> RepuestoRepository
+VentaRepuestoRepositoryAdapter --> RepuestoEntityMapper
+
+' Relaciones Entity Mappers
+VentaEntityMapper --> Venta
+VentaEntityMapper --> VentaEntity
+VentaEntityMapper --> DetalleVentaEntityMapper
+
+DetalleVentaEntityMapper --> DetalleVenta
+DetalleVentaEntityMapper --> DetalleVentaEntity
+
+RepuestoEntityMapper --> Repuesto
+RepuestoEntityMapper --> RepuestoEntity
+
+' JpaRepository
+VentaRepository --|> JpaRepository
+RepuestoRepository --|> JpaRepository
+
+interface JpaRepository<<Spring Data>>
+@enduml

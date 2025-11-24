@@ -1,0 +1,152 @@
+@startuml Crear Venta - Diagrama de Secuencia
+
+title Proceso de Crear Venta
+
+actor Cliente
+participant "VentaController" as Controller
+participant "VentaMapper" as Mapper
+participant "VentaService" as Service
+participant "VentaPersistantPort" as VentaPort
+participant "RepuestoPersistantPort" as RepuestoPort
+participant "Venta (Domain)" as VentaDomain
+participant "DetalleVenta (Domain)" as DetalleDomain
+participant "Repuesto (Domain)" as RepuestoDomain
+participant "VentaRepositoryAdapter" as VentaAdapter
+participant "RepuestoRepositoryAdapter" as RepuestoAdapter
+participant "VentaRepository (JPA)" as VentaRepo
+participant "RepuestoRepository (JPA)" as RepuestoRepo
+database "MySQL Database" as DB
+
+Cliente -> Controller: POST /api/ventas\n(VentaDTO)
+activate Controller
+
+Controller -> Mapper: toDomain(ventaDTO)
+activate Mapper
+
+Mapper -> DetalleDomain: new DetalleVenta(...)\npara cada detalleDTO
+activate DetalleDomain
+DetalleDomain -> DetalleDomain: calcular total\n(cantidad * precioUnitario)
+DetalleDomain -> DetalleDomain: calcular descuento\n(precioSugerido - precioUnitario)
+DetalleDomain --> Mapper: detalleVenta
+deactivate DetalleDomain
+
+Mapper -> VentaDomain: new Venta(idVenta, nombreCliente,\nLocalDateTime.now(), detalleVenta)
+activate VentaDomain
+VentaDomain -> VentaDomain: calcular total\n(sum de todos los detalles)
+VentaDomain -> VentaDomain: calcular descuentoTotal\n(sum de descuentos)
+VentaDomain -> VentaDomain: set estadoVenta = true
+VentaDomain --> Mapper: venta
+deactivate VentaDomain
+
+Mapper --> Controller: venta (Domain)
+deactivate Mapper
+
+Controller -> Service: save(venta)
+activate Service
+
+note over Service: Inicia transacción @Transactional
+
+loop Para cada DetalleVenta en venta.getDetalleVenta()
+    Service -> Service: obtener idRepuesto del detalle
+    
+    Service -> RepuestoPort: findById(repuestoId)
+    activate RepuestoPort
+    RepuestoPort -> RepuestoAdapter: findById(repuestoId)
+    activate RepuestoAdapter
+    RepuestoAdapter -> RepuestoRepo: findById(Long.valueOf(repuestoId))
+    activate RepuestoRepo
+    RepuestoRepo -> DB: SELECT * FROM repuesto\nWHERE id = ?
+    activate DB
+    DB --> RepuestoRepo: RepuestoEntity
+    deactivate DB
+    RepuestoRepo --> RepuestoAdapter: Optional<RepuestoEntity>
+    deactivate RepuestoRepo
+    RepuestoAdapter -> RepuestoAdapter: mapper.toRepuestoDomain(entity)
+    RepuestoAdapter --> RepuestoPort: Optional<Repuesto>
+    deactivate RepuestoAdapter
+    RepuestoPort --> Service: Optional<Repuesto>
+    deactivate RepuestoPort
+    
+    alt Repuesto no encontrado
+        Service -> Service: throw RepuestoNotFoundException
+        Service --> Controller: Error: Repuesto no encontrado
+        Controller --> Cliente: HTTP 500\nError en la venta
+    end
+    
+    Service -> RepuestoDomain: decreaseStockRepuesto(cantidad)
+    activate RepuestoDomain
+    
+    alt Stock insuficiente
+        RepuestoDomain -> RepuestoDomain: verificar stock < cantidad
+        RepuestoDomain --> Service: throw RepuestoNotFoundException
+        Service -> Service: wrap en VentaFailedException
+        Service --> Controller: Error: Stock insuficiente
+        Controller --> Cliente: HTTP 500\nNo se pudo completar la venta
+    end
+    
+    RepuestoDomain -> RepuestoDomain: stockRepuesto -= cantidad
+    RepuestoDomain --> Service: true
+    deactivate RepuestoDomain
+    
+    Service -> RepuestoPort: save(repuesto)
+    activate RepuestoPort
+    RepuestoPort -> RepuestoAdapter: save(repuesto)
+    activate RepuestoAdapter
+    RepuestoAdapter -> RepuestoAdapter: mapper.toRepuestoEntity(repuesto)
+    RepuestoAdapter -> RepuestoRepo: save(repuestoEntity)
+    activate RepuestoRepo
+    RepuestoRepo -> DB: UPDATE repuesto\nSET stock = ?\nWHERE id = ?
+    activate DB
+    DB --> RepuestoRepo: RepuestoEntity actualizado
+    deactivate DB
+    RepuestoRepo --> RepuestoAdapter: RepuestoEntity
+    deactivate RepuestoRepo
+    RepuestoAdapter -> RepuestoAdapter: mapper.toRepuestoDomain(entity)
+    RepuestoAdapter --> RepuestoPort: Repuesto
+    deactivate RepuestoAdapter
+    RepuestoPort --> Service: Repuesto actualizado
+    deactivate RepuestoPort
+end
+
+Service -> VentaPort: save(venta)
+activate VentaPort
+VentaPort -> VentaAdapter: save(venta)
+activate VentaAdapter
+
+VentaAdapter -> VentaAdapter: mapper.toVentaEntity(venta)
+
+loop Para cada DetalleVentaEntity
+    VentaAdapter -> VentaAdapter: detalle.setVenta(ventaEntity)\n(establecer relación bidireccional)
+end
+
+VentaAdapter -> VentaRepo: save(ventaEntity)
+activate VentaRepo
+VentaRepo -> DB: INSERT INTO venta\n(nombre_cliente, fecha_venta,\ntotal, descuento_total, estado_venta)
+activate DB
+DB --> VentaRepo: VentaEntity con ID generado
+deactivate DB
+
+VentaRepo -> DB: INSERT INTO detalle_venta\n(cantidad, precio_unitario, ...)\npara cada detalle
+activate DB
+DB --> VentaRepo: DetalleVentaEntity guardados
+deactivate DB
+
+VentaRepo --> VentaAdapter: VentaEntity guardada
+deactivate VentaRepo
+
+VentaAdapter -> VentaAdapter: mapper.toVentaModel(entityGuardada)
+VentaAdapter --> VentaPort: Venta
+deactivate VentaAdapter
+VentaPort --> Service: Venta guardada
+deactivate VentaPort
+
+note over Service: Commit de transacción
+
+Service --> Controller: Venta guardada
+deactivate Service
+
+Controller -> Controller: crear Map<String, String>\ncon mensaje de éxito
+Controller --> Cliente: HTTP 200 OK\n{"mensaje": "Venta registrada exitosamente"}
+deactivate Controller
+
+@enduml
