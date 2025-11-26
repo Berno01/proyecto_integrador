@@ -1,9 +1,18 @@
 <nav class="navbar">
   <div class="navbar-container">
     <!-- Logo -->
-    <a routerLink="/" class="navbar-logo">
-      <span class="logo-text">Tienda de repuestos</span>
-    </a>
+<a routerLink="/" class="navbar-logo">
+  <img
+    src="https://vinosbarbacana.com/wp-content/uploads/2020/10/logowebBlanco.png"
+    alt="Bodega Barbacana"
+    class="logo-img"
+  />
+  <span class="logo-text">
+    <span class="logo-title">Bodega Barbacana</span>
+    <span class="logo-subtitle">Vinos &amp; Singanis</span>
+  </span>
+</a>
+
 
     <!-- Mobile Menu Button -->
     <button class="mobile-menu-btn" (click)="toggleMenu()">
@@ -22,7 +31,7 @@
           class="navbar-link"
           (click)="isMenuOpen = false"
         >
-          Dashboard
+          Panel de control
         </a>
       </li>
 
@@ -48,7 +57,7 @@
         </a>
       </li>
 
-      <!-- Dropdown Catalogo -->
+      <!-- Dropdown Inventario -->
       <li
         class="navbar-item dropdown"
         (mouseenter)="isDropdownOpen = true"
@@ -58,7 +67,7 @@
           class="navbar-link dropdown-toggle"
           [class.active]="rlaCategorias.isActive || rlaRepuestos.isActive"
         >
-          Catálogo ▾
+          Inventario ▾
         </a>
         <ul class="dropdown-menu" [class.show]="isDropdownOpen">
           <li>
@@ -69,7 +78,7 @@
               class="dropdown-link"
               (click)="isMenuOpen = false; isDropdownOpen = false"
             >
-              Categorías
+              Líneas de producto
             </a>
           </li>
           <li>
@@ -80,7 +89,7 @@
               class="dropdown-link"
               (click)="isMenuOpen = false; isDropdownOpen = false"
             >
-              Repuestos
+              Productos
             </a>
           </li>
         </ul>

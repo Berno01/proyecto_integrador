@@ -1,49 +1,52 @@
-<div class="categoria-list-container">
-  <div class="header">
-    <h1>Gestión de Categorías</h1>
-    <button class="btn-primary" (click)="nuevaCategoria()" [disabled]="isLoading">
-      + Nueva Categoría
+<div class="lineas-container">
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1>Líneas de producto</h1>
+      <p class="page-subtitle">Clasificación de vinos, singanis e insumos</p>
+    </div>
+    <button class="btn btn-primary" (click)="nuevaCategoria()" [disabled]="isLoading">
+      + Nueva línea
     </button>
   </div>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="loading">
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
     <div class="spinner"></div>
-    <p>Cargando categorías...</p>
+    <p>Cargando líneas de producto...</p>
   </div>
 
-  <!-- Error Message -->
-  <div *ngIf="errorMessage && !isLoading" class="error-message">
-    {{ errorMessage }}
-    <button class="btn-retry" (click)="cargarCategorias()">Reintentar</button>
+  <!-- Error -->
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+    <span>{{ errorMessage }}</span>
+    <button class="btn btn-retry" (click)="cargarCategorias()">Reintentar</button>
   </div>
 
-  <!-- Categorías Table -->
+  <!-- Tabla de líneas -->
   <div *ngIf="!isLoading && !errorMessage" class="table-container">
-    <table *ngIf="categorias.length > 0" class="categorias-table">
+    <table *ngIf="categorias.length > 0" class="lineas-table">
       <thead>
         <tr>
           <th>ID</th>
-          <th>Nombre de Categoría</th>
-          <th>Acciones</th>
+          <th>Nombre de línea</th>
+          <th class="th-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let categoria of categorias">
-          <td>{{ categoria.idCategoria }}</td>
-          <td>{{ categoria.nombreCategoria }}</td>
-          <td class="actions">
+          <td class="id-cell">{{ categoria.idCategoria }}</td>
+          <td class="nombre-cell">{{ categoria.nombreCategoria }}</td>
+          <td class="acciones-cell">
             <button
-              class="btn-edit"
+              class="btn-action btn-edit"
               (click)="editarCategoria(categoria.idCategoria!)"
-              title="Editar categoría"
+              title="Editar línea"
             >
               Editar
             </button>
             <button
-              class="btn-delete"
+              class="btn-action btn-delete"
               (click)="eliminarCategoria(categoria.idCategoria!, categoria.nombreCategoria)"
-              title="Eliminar categoría"
+              title="Eliminar línea"
             >
               Eliminar
             </button>
@@ -54,8 +57,8 @@
 
     <!-- Empty State -->
     <div *ngIf="categorias.length === 0" class="empty-state">
-      <p>No hay categorías registradas</p>
-      <button class="btn-primary" (click)="nuevaCategoria()">Crear primera categoría</button>
+      <p>No hay líneas de producto registradas</p>
+      <button class="btn btn-primary" (click)="nuevaCategoria()">Crear primera línea</button>
     </div>
   </div>
 </div>

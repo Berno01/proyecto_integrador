@@ -1,7 +1,10 @@
 <div class="ventas-container">
   <div class="page-header">
-    <h1>Historial de Ventas</h1>
-    <button class="btn btn-primary" (click)="nuevaVenta()">+ Nueva Venta</button>
+    <div class="page-header-text">
+      <h1>Ventas</h1>
+      <p class="page-subtitle">Registro de ventas de vinos y singanis</p>
+    </div>
+    <button class="btn btn-primary" (click)="nuevaVenta()">+ Nueva venta</button>
   </div>
 
   <!-- Mensajes -->
@@ -19,7 +22,7 @@
   <div *ngIf="!loading" class="table-container">
     <!-- Empty State -->
     <div *ngIf="ventas.length === 0" class="empty-state">
-      <p>No se encontraron ventas</p>
+      <p>No se registraron ventas todavía</p>
       <button class="btn btn-primary" (click)="nuevaVenta()">Crear primera venta</button>
     </div>
 
@@ -32,7 +35,7 @@
           <th>Fecha</th>
           <th>Total</th>
           <th>Descuento</th>
-          <th>Acciones</th>
+          <th class="th-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -45,7 +48,7 @@
             <span *ngIf="venta.descuentoTotal > 0" class="descuento-badge">
               -{{ venta.descuentoTotal.toFixed(2) }} Bs.
             </span>
-            <span *ngIf="venta.descuentoTotal === 0">-</span>
+            <span *ngIf="venta.descuentoTotal === 0" class="descuento-none">Sin descuento</span>
           </td>
           <td class="acciones-cell">
             <button

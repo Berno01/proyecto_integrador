@@ -1,11 +1,15 @@
 <div class="compra-container">
   <!-- Breadcrumb / Botón Volver -->
   <div class="breadcrumb">
-    <button class="btn-back" (click)="volverAlHistorial()">← Volver al Historial</button>
+    <button class="btn-back" (click)="volverAlHistorial()">← Volver al historial</button>
   </div>
 
+  <!-- Header -->
   <div class="page-header">
-    <h1>{{ modoEdicion ? 'Editar Compra #' + compraId : 'Nueva Compra' }}</h1>
+    <div class="page-header-text">
+      <h1>{{ modoEdicion ? 'Editar compra #' + compraId : 'Nueva compra' }}</h1>
+      <p class="page-subtitle">Registro de compras de insumos y materia prima</p>
+    </div>
   </div>
 
   <!-- Mensajes -->
@@ -21,10 +25,10 @@
   <form [formGroup]="compraForm" class="compra-form">
     <!-- Información del Proveedor -->
     <div class="form-section">
-      <h2>Información del Proveedor</h2>
+      <h2 class="section-title">Información del proveedor</h2>
 
       <div class="form-group">
-        <label for="nombre_proveedor">Nombre del Proveedor *</label>
+        <label for="nombre_proveedor">Nombre del proveedor *</label>
         <input
           type="text"
           id="nombre_proveedor"
@@ -34,7 +38,7 @@
             compraForm.get('nombre_proveedor')?.invalid &&
             compraForm.get('nombre_proveedor')?.touched
           "
-          placeholder="Ingrese el nombre del proveedor"
+          placeholder="Ej. Proveedor de botellas, insumos, etc."
         />
         <div
           *ngIf="
@@ -56,17 +60,17 @@
     <!-- Detalle de Compra -->
     <div class="form-section">
       <div class="section-header">
-        <h2>Detalle de Compra</h2>
+        <h2 class="section-title">Detalle de la compra</h2>
         <button type="button" class="btn btn-add" (click)="abrirModalRepuestos()">
-          + Agregar Repuesto
+          + Agregar producto
         </button>
       </div>
 
       <!-- Lista de Repuestos -->
       <div class="detalle-lista">
         <div *ngIf="detalleCompra.length === 0" class="empty-state">
-          <p>No hay repuestos agregados</p>
-          <p class="hint">Haga clic en "Agregar Repuesto" para comenzar</p>
+          <p>No hay productos agregados</p>
+          <p class="hint">Use “Agregar producto” para añadir insumos o materia prima</p>
         </div>
 
         <app-detalle-compra-item
@@ -84,8 +88,8 @@
     <div class="form-section totales-section" *ngIf="detalleCompra.length > 0">
       <div class="totales-grid">
         <div class="total-row total-final">
-          <span class="total-label">TOTAL:</span>
-          <span class="total-value-final">${{ totalCompra.toFixed(2) }}</span>
+          <span class="total-label">Total de la compra</span>
+          <span class="total-value-final">Bs.{{ totalCompra.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -102,8 +106,8 @@
         (click)="guardarCompra()"
         [disabled]="loading || detalleCompra.length === 0"
       >
-        <span *ngIf="!loading">{{ modoEdicion ? 'Actualizar Compra' : 'Guardar Compra' }}</span>
-        <span *ngIf="loading">{{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}</span>
+        <span *ngIf="!loading">{{ modoEdicion ? 'Actualizar compra' : 'Guardar compra' }}</span>
+        <span *ngIf="loading">{{ modoEdicion ? 'Actualizando…' : 'Guardando…' }}</span>
       </button>
     </div>
   </form>

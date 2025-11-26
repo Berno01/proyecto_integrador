@@ -1,41 +1,44 @@
-<div class="repuesto-list-container">
-  <div class="header">
-    <h1>Gestión de Repuestos</h1>
-    <button class="btn-primary" (click)="nuevoRepuesto()" [disabled]="isLoading">
-      + Nuevo Repuesto
+<div class="productos-container">
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1>Productos</h1>
+      <p class="page-subtitle">Catálogo de vinos, singanis e insumos</p>
+    </div>
+    <button class="btn btn-primary" (click)="nuevoRepuesto()" [disabled]="isLoading">
+      + Nuevo producto
     </button>
   </div>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="loading">
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
     <div class="spinner"></div>
-    <p>Cargando repuestos...</p>
+    <p>Cargando productos...</p>
   </div>
 
-  <!-- Error Message -->
-  <div *ngIf="errorMessage && !isLoading" class="error-message">
-    {{ errorMessage }}
-    <button class="btn-retry" (click)="cargarRepuestos()">Reintentar</button>
+  <!-- Error -->
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+    <span>{{ errorMessage }}</span>
+    <button class="btn btn-retry" (click)="cargarRepuestos()">Reintentar</button>
   </div>
 
-  <!-- Repuestos Table -->
+  <!-- Tabla de productos -->
   <div *ngIf="!isLoading && !errorMessage" class="table-container">
     <table *ngIf="repuestos.length > 0" class="repuestos-table">
       <thead>
         <tr>
           <th>ID</th>
-          <th>Nombre Repuesto</th>
+          <th>Nombre del producto</th>
           <th>Stock</th>
-          <th>Costo</th>
-          <th>Precio Sugerido</th>
+          <th>Costo unitario</th>
+          <th>Precio sugerido</th>
           <th>Estado</th>
-          <th>Categorías</th>
-          <th>Acciones</th>
+          <th>Líneas</th>
+          <th class="th-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let repuesto of repuestos">
-          <td>{{ repuesto.idRepuesto }}</td>
+          <td class="id-cell">{{ repuesto.idRepuesto }}</td>
           <td class="nombre-repuesto">{{ repuesto.nombreRepuesto }}</td>
           <td class="text-center">
             <span [class.stock-bajo]="repuesto.stockActual < 10">
@@ -52,18 +55,18 @@
           <td class="categorias-cell">
             {{ obtenerNombresCategorias(repuesto) }}
           </td>
-          <td class="actions">
+          <td class="acciones-cell">
             <button
-              class="btn-edit"
+              class="btn-action btn-edit"
               (click)="editarRepuesto(repuesto.idRepuesto)"
-              title="Editar repuesto"
+              title="Editar producto"
             >
               Editar
             </button>
             <button
-              class="btn-delete"
+              class="btn-action btn-delete"
               (click)="eliminarRepuesto(repuesto.idRepuesto, repuesto.nombreRepuesto)"
-              title="Eliminar repuesto"
+              title="Eliminar producto"
             >
               Eliminar
             </button>
@@ -74,8 +77,8 @@
 
     <!-- Empty State -->
     <div *ngIf="repuestos.length === 0" class="empty-state">
-      <p>No hay repuestos registrados</p>
-      <button class="btn-primary" (click)="nuevoRepuesto()">Crear primer repuesto</button>
+      <p>No hay productos registrados</p>
+      <button class="btn btn-primary" (click)="nuevoRepuesto()">Crear primer producto</button>
     </div>
   </div>
 </div>

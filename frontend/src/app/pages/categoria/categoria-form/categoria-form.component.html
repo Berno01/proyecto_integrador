@@ -1,17 +1,22 @@
 <div class="categoria-form-container">
   <div class="form-header">
-    <h1>{{ modoEdicion ? 'Editar Categoría' : 'Nueva Categoría' }}</h1>
+    <div class="form-header-text">
+      <h1>{{ modoEdicion ? 'Editar línea de producto' : 'Nueva línea de producto' }}</h1>
+      <p class="form-subtitle">
+        Organice las líneas de producto que agrupan sus repuestos
+      </p>
+    </div>
     <button class="btn-back" (click)="cancelar()">← Volver a la lista</button>
   </div>
 
   <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="loading">
     <div class="spinner"></div>
-    <p>Cargando datos de la categoría...</p>
+    <p>Cargando datos de la línea de producto...</p>
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="error-message">
+  <div *ngIf="errorMessage" class="alert alert-error">
     {{ errorMessage }}
   </div>
 
@@ -23,12 +28,14 @@
 
       <!-- Nombre Categoria -->
       <div class="form-group">
-        <label for="nombreCategoria"> Nombre de Categoría <span class="required">*</span> </label>
+        <label for="nombreCategoria">
+          Nombre de la línea de producto <span class="required">*</span>
+        </label>
         <input
           type="text"
           id="nombreCategoria"
           formControlName="nombreCategoria"
-          placeholder="Ej: Filtros, Frenos, Bujías"
+          placeholder="Ej: Vinos tintos, Espumantes, Accesorios"
           [class.error]="mostrarError('nombreCategoria')"
           [disabled]="isSaving"
         />
@@ -40,20 +47,22 @@
 
       <!-- Información adicional -->
       <div class="form-info" *ngIf="modoEdicion">
-        <p><strong>ID:</strong> {{ categoriaForm.get('idCategoria')?.value }}</p>
+        <p><strong>ID interno:</strong> {{ categoriaForm.get('idCategoria')?.value }}</p>
       </div>
 
       <!-- Botones de acción -->
       <div class="form-actions">
         <button type="submit" class="btn-submit" [disabled]="isSaving || categoriaForm.invalid">
           <span *ngIf="!isSaving">
-            {{ modoEdicion ? 'Actualizar Categoría' : 'Guardar Categoría' }}
+            {{ modoEdicion ? 'Actualizar línea de producto' : 'Guardar línea de producto' }}
           </span>
-          <span *ngIf="isSaving"> <span class="spinner-small"></span> Guardando... </span>
+          <span *ngIf="isSaving">
+            <span class="spinner-small"></span> Guardando...
+          </span>
         </button>
 
         <button type="button" class="btn-cancel" (click)="cancelar()" [disabled]="isSaving">
-          ❌ Cancelar
+          Cancelar
         </button>
       </div>
 
@@ -62,7 +71,7 @@
         <p>⚠️ Por favor, corrija los errores antes de continuar:</p>
         <ul>
           <li *ngIf="categoriaForm.get('nombreCategoria')?.hasError('required')">
-            El nombre de la categoría es requerido
+            El nombre de la línea de producto es requerido
           </li>
           <li *ngIf="categoriaForm.get('nombreCategoria')?.hasError('minlength')">
             El nombre debe tener al menos 3 caracteres
@@ -71,7 +80,4 @@
       </div>
     </form>
   </div>
-
-  <!-- Ayuda -->
-  
 </div>

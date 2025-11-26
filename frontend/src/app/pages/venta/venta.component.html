@@ -1,11 +1,15 @@
 <div class="venta-container">
   <!-- Breadcrumb / Botón Volver -->
   <div class="breadcrumb">
-    <button class="btn-back" (click)="volverAlHistorial()">← Volver al Historial</button>
+    <button class="btn-back" (click)="volverAlHistorial()">← Volver al historial</button>
   </div>
 
+  <!-- Header -->
   <div class="page-header">
-    <h1>{{ modoEdicion ? 'Editar Venta #' + ventaId : 'Nueva Venta' }}</h1>
+    <div class="page-header-text">
+      <h1>{{ modoEdicion ? 'Editar venta #' + ventaId : 'Nueva venta' }}</h1>
+      <p class="page-subtitle">Registro de venta de vinos y singanis</p>
+    </div>
   </div>
 
   <!-- Mensajes -->
@@ -21,10 +25,10 @@
   <form [formGroup]="ventaForm" class="venta-form">
     <!-- Información del Cliente -->
     <div class="form-section">
-      <h2>Información del Cliente</h2>
+      <h2 class="section-title">Información del cliente</h2>
 
       <div class="form-group">
-        <label for="nombre_cliente">Nombre del Cliente *</label>
+        <label for="nombre_cliente">Nombre del cliente *</label>
         <input
           type="text"
           id="nombre_cliente"
@@ -33,12 +37,10 @@
           [class.invalid]="
             ventaForm.get('nombre_cliente')?.invalid && ventaForm.get('nombre_cliente')?.touched
           "
-          placeholder="Ingrese el nombre del cliente"
+          placeholder="Ej. Juan Pérez"
         />
         <div
-          *ngIf="
-            ventaForm.get('nombre_cliente')?.invalid && ventaForm.get('nombre_cliente')?.touched
-          "
+          *ngIf="ventaForm.get('nombre_cliente')?.invalid && ventaForm.get('nombre_cliente')?.touched"
           class="validation-error"
         >
           <span *ngIf="ventaForm.get('nombre_cliente')?.hasError('required')">
@@ -54,17 +56,17 @@
     <!-- Detalle de Venta -->
     <div class="form-section">
       <div class="section-header">
-        <h2>Detalle de Venta</h2>
+        <h2 class="section-title">Detalle de la venta</h2>
         <button type="button" class="btn btn-add" (click)="abrirModalRepuestos()">
-          + Agregar Repuesto
+          + Agregar producto
         </button>
       </div>
 
-      <!-- Lista de Repuestos -->
+      <!-- Lista de Detalle -->
       <div class="detalle-lista">
         <div *ngIf="detalleVenta.length === 0" class="empty-state">
-          <p>No hay repuestos agregados</p>
-          <p class="hint">Haga clic en "Agregar Repuesto" para comenzar</p>
+          <p>No hay productos agregados</p>
+          <p class="hint">Use “Agregar producto” para seleccionar vinos o singanis</p>
         </div>
 
         <app-detalle-venta-item
@@ -82,8 +84,8 @@
     <div class="form-section totales-section" *ngIf="detalleVenta.length > 0">
       <div class="totales-grid">
         <div class="total-row total-final">
-          <span class="total-label">TOTAL:</span>
-          <span class="total-value-final">${{ totalVenta.toFixed(2) }}</span>
+          <span class="total-label">Total de la venta</span>
+          <span class="total-value-final">Bs.{{ totalVenta.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -100,13 +102,13 @@
         (click)="guardarVenta()"
         [disabled]="loading || detalleVenta.length === 0"
       >
-        <span *ngIf="!loading">{{ modoEdicion ? 'Actualizar Venta' : 'Guardar Venta' }}</span>
-        <span *ngIf="loading">{{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}</span>
+        <span *ngIf="!loading">{{ modoEdicion ? 'Actualizar venta' : 'Guardar venta' }}</span>
+        <span *ngIf="loading">{{ modoEdicion ? 'Actualizando…' : 'Guardando…' }}</span>
       </button>
     </div>
   </form>
 
-  <!-- Modal de Repuestos -->
+  <!-- Modal de Productos -->
   <app-modal-repuestos
     *ngIf="mostrarModal"
     (close)="cerrarModal()"

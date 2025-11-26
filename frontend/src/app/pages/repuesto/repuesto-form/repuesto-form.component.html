@@ -1,17 +1,22 @@
 <div class="repuesto-form-container">
   <div class="form-header">
-    <h1>{{ modoEdicion ? 'Editar Repuesto' : 'Nuevo Repuesto' }}</h1>
-    <button class="btn-back" (click)="cancelar()">← Volver a la lista</button>
+    <div class="form-header-text">
+      <h1>{{ modoEdicion ? 'Editar producto' : 'Nuevo producto' }}</h1>
+      <p class="form-subtitle">
+        Complete los datos del producto para usarlo en ventas y compras.
+      </p>
+    </div>
+    <button class="btn-back" (click)="cancelar()">← Volver al listado</button>
   </div>
 
   <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="loading">
     <div class="spinner"></div>
-    <p>Cargando datos del repuesto...</p>
+    <p>Cargando datos del producto...</p>
   </div>
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="error-message">
+  <div *ngIf="errorMessage" class="alert alert-error">
     {{ errorMessage }}
   </div>
 
@@ -21,27 +26,31 @@
       <!-- ID Repuesto (hidden) -->
       <input type="hidden" formControlName="idRepuesto" />
 
+      <!-- Primera fila: nombre + stock -->
       <div class="form-row">
-        <!-- Nombre Repuesto -->
+        <!-- Nombre del producto -->
         <div class="form-group">
-          <label for="nombreRepuesto"> Nombre del Repuesto <span class="required">*</span> </label>
+          <label for="nombreRepuesto">
+            Nombre del producto <span class="required">*</span>
+          </label>
           <input
             type="text"
             id="nombreRepuesto"
             formControlName="nombreRepuesto"
-            placeholder="Ej: Filtro de aceite, Pastillas de freno"
+            placeholder="Ej: Vino Malbec Reserva 750 ml"
             [class.error]="mostrarError('nombreRepuesto')"
             [disabled]="isSaving"
           />
-
           <div *ngIf="mostrarError('nombreRepuesto')" class="error-text">
             {{ obtenerMensajeError('nombreRepuesto') }}
           </div>
         </div>
 
-        <!-- Stock Actual -->
+        <!-- Stock actual -->
         <div class="form-group">
-          <label for="stockActual"> Stock Actual <span class="required">*</span> </label>
+          <label for="stockActual">
+            Stock actual <span class="required">*</span>
+          </label>
           <input
             type="number"
             id="stockActual"
@@ -52,19 +61,21 @@
             [class.error]="mostrarError('stockActual')"
             [disabled]="isSaving"
           />
-
           <div *ngIf="mostrarError('stockActual')" class="error-text">
             {{ obtenerMensajeError('stockActual') }}
           </div>
         </div>
       </div>
 
+      <!-- Segunda fila: costo + precio sugerido -->
       <div class="form-row">
-        <!-- Costo Repuesto -->
+        <!-- Costo -->
         <div class="form-group">
-          <label for="costoRepuesto"> Costo del Repuesto <span class="required">*</span> </label>
+          <label for="costoRepuesto">
+            Costo unitario <span class="required">*</span>
+          </label>
           <div class="input-with-prefix">
-            
+            <span class="prefix"></span>
             <input
               type="number"
               id="costoRepuesto"
@@ -75,19 +86,19 @@
               [class.error]="mostrarError('costoRepuesto')"
               [disabled]="isSaving"
             />
-            <span class="prefix">Bs.</span>
           </div>
-
           <div *ngIf="mostrarError('costoRepuesto')" class="error-text">
             {{ obtenerMensajeError('costoRepuesto') }}
           </div>
         </div>
 
-        <!-- Precio Sugerido -->
+        <!-- Precio sugerido -->
         <div class="form-group">
-          <label for="precioSugerido"> Precio Sugerido <span class="required">*</span> </label>
+          <label for="precioSugerido">
+            Precio sugerido de venta <span class="required">*</span>
+          </label>
           <div class="input-with-prefix">
-            <span class="prefix">Bs</span>
+            <span class="prefix"></span>
             <input
               type="number"
               id="precioSugerido"
@@ -99,29 +110,35 @@
               [disabled]="isSaving"
             />
           </div>
-
           <div *ngIf="mostrarError('precioSugerido')" class="error-text">
             {{ obtenerMensajeError('precioSugerido') }}
           </div>
         </div>
       </div>
 
-      <!-- Estado Repuesto -->
+      <!-- Estado -->
       <div class="form-group">
         <label class="checkbox-label">
           <input type="checkbox" formControlName="estadoRepuesto" [disabled]="isSaving" />
-          <span>Repuesto activo</span>
+          <span>Producto activo</span>
         </label>
-        <small class="help-text">Desmarque si el repuesto no está disponible</small>
+        <small class="help-text">
+          Desmarque si no desea que este producto esté disponible para operaciones.
+        </small>
       </div>
 
-      <!-- Categorías -->
+      <!-- Líneas de producto / Categorías -->
       <div class="form-group">
-        <label> Categorías <span class="required">*</span> </label>
-        <small class="help-text">Seleccione al menos una categoría</small>
+        <label>
+          Líneas de producto <span class="required">*</span>
+        </label>
+        <small class="help-text">
+          Seleccione al menos una línea a la que pertenece el producto (ej: Tintos, Blancos,
+          Espumantes).
+        </small>
 
         <div *ngIf="isLoadingCategorias" class="loading-inline">
-          <span class="spinner-small"></span> Cargando categorías...
+          <span class="spinner-small"></span> Cargando líneas de producto...
         </div>
 
         <div *ngIf="!isLoadingCategorias" class="categorias-container">
@@ -140,60 +157,63 @@
         </div>
 
         <div *ngIf="listaCategorias.length === 0 && !isLoadingCategorias" class="warning-message">
-          No hay categorías disponibles. Por favor, cree al menos una categoría primero.
+          No hay líneas de producto disponibles. Cree al menos una línea antes de registrar
+          productos.
         </div>
 
         <div *ngIf="mostrarError('idsCategorias')" class="error-text">
-          Debe seleccionar al menos una categoría
+          Debe seleccionar al menos una línea de producto.
         </div>
       </div>
 
       <!-- Información adicional -->
       <div class="form-info" *ngIf="modoEdicion">
-        <p><strong>ID:</strong> {{ repuestoForm.get('idRepuesto')?.value }}</p>
+        <p><strong>ID interno:</strong> {{ repuestoForm.get('idRepuesto')?.value }}</p>
       </div>
 
       <!-- Botones de acción -->
       <div class="form-actions">
         <button type="submit" class="btn-submit" [disabled]="isSaving || repuestoForm.invalid">
           <span *ngIf="!isSaving">
-            {{ modoEdicion ? 'Actualizar Repuesto' : 'Guardar Repuesto' }}
+            {{ modoEdicion ? 'Actualizar producto' : 'Guardar producto' }}
           </span>
-          <span *ngIf="isSaving"> <span class="spinner-small"></span> Guardando... </span>
+          <span *ngIf="isSaving">
+            <span class="spinner-small"></span> Guardando...
+          </span>
         </button>
 
         <button type="button" class="btn-cancel" (click)="cancelar()" [disabled]="isSaving">
-          ❌ Cancelar
+          Cancelar
         </button>
       </div>
 
-      <!-- Validación del formulario -->
+      <!-- Resumen de validación -->
       <div class="form-validation-summary" *ngIf="repuestoForm.invalid && repuestoForm.touched">
         <p>Por favor, corrija los errores antes de continuar:</p>
         <ul>
           <li *ngIf="repuestoForm.get('nombreRepuesto')?.hasError('required')">
-            El nombre del repuesto es requerido
+            El nombre del producto es requerido.
           </li>
           <li *ngIf="repuestoForm.get('nombreRepuesto')?.hasError('minlength')">
-            El nombre debe tener al menos 3 caracteres
+            El nombre debe tener al menos 3 caracteres.
           </li>
           <li *ngIf="repuestoForm.get('stockActual')?.hasError('required')">
-            El stock actual es requerido
+            El stock actual es requerido.
           </li>
           <li *ngIf="repuestoForm.get('stockActual')?.hasError('min')">
-            El stock no puede ser negativo
+            El stock no puede ser negativo.
           </li>
           <li *ngIf="repuestoForm.get('costoRepuesto')?.hasError('required')">
-            El costo del repuesto es requerido
+            El costo unitario es requerido.
           </li>
           <li *ngIf="repuestoForm.get('costoRepuesto')?.hasError('min')">
-            El costo no puede ser negativo
+            El costo no puede ser negativo.
           </li>
           <li *ngIf="repuestoForm.get('precioSugerido')?.hasError('required')">
-            El precio sugerido es requerido
+            El precio sugerido es requerido.
           </li>
           <li *ngIf="repuestoForm.get('precioSugerido')?.hasError('min')">
-            El precio no puede ser negativo
+            El precio no puede ser negativo.
           </li>
           <li
             *ngIf="
@@ -201,13 +221,10 @@
               repuestoForm.get('idsCategorias')?.hasError('minlength')
             "
           >
-            Debe seleccionar al menos una categoría
+            Debe seleccionar al menos una línea de producto.
           </li>
         </ul>
       </div>
     </form>
   </div>
-
-  <!-- Ayuda -->
- 
 </div>
