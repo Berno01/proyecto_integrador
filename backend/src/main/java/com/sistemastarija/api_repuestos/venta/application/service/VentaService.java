@@ -45,9 +45,27 @@ public class VentaService implements CreateVentaUseCase, UpdateVentaUseCase, Fin
                 throw new VentaFailedException("No se pudo completar la venta: " + e.getMessage(), e);
             }
             repuestoPersistantPort.save(repuesto);
+
+            // Lógica hardcodeada para descontar insumos de fabricación
+            updateInsumoStock(27, detalle.getCantidad()); // Botellas vacías
+            updateInsumoStock(28, detalle.getCantidad()); // Corchos
+            updateInsumoStock(30, detalle.getCantidad()); // Etiquetas
         }
 
         return ventaPersistantPort.save(venta);
+    }
+
+    private void updateInsumoStock(Integer insumoId, Integer cantidad) {
+        Optional<Repuesto> opcionalInsumo = repuestoPersistantPort.findById(insumoId);
+        Repuesto insumo = opcionalInsumo.orElseThrow(() ->
+                new RepuestoNotFoundException("El insumo con ID " + insumoId + " no fue encontrado.")
+        );
+        try {
+            insumo.decreaseStockRepuesto(cantidad);
+        } catch (RepuestoNotFoundException e) {
+            throw new VentaFailedException("No se pudo descontar el insumo ID " + insumoId + ": " + e.getMessage(), e);
+        }
+        repuestoPersistantPort.save(insumo);
     }
 
     @Transactional

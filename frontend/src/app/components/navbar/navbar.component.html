@@ -1,18 +1,17 @@
 <nav class="navbar">
   <div class="navbar-container">
     <!-- Logo -->
-<a routerLink="/" class="navbar-logo">
-  <img
-    src="https://vinosbarbacana.com/wp-content/uploads/2020/10/logowebBlanco.png"
-    alt="Bodega Barbacana"
-    class="logo-img"
-  />
-  <span class="logo-text">
-    <span class="logo-title">Bodega Barbacana</span>
-    <span class="logo-subtitle">Vinos &amp; Singanis</span>
-  </span>
-</a>
-
+    <a routerLink="/" class="navbar-logo">
+      <img
+        src="https://vinosbarbacana.com/wp-content/uploads/2020/10/logowebBlanco.png"
+        alt="Bodega Barbacana"
+        class="logo-img"
+      />
+      <span class="logo-text">
+        <span class="logo-title">Bodega Barbacana</span>
+        <span class="logo-subtitle">Vinos &amp; Singanis</span>
+      </span>
+    </a>
 
     <!-- Mobile Menu Button -->
     <button class="mobile-menu-btn" (click)="toggleMenu()">
@@ -65,7 +64,9 @@
       >
         <a
           class="navbar-link dropdown-toggle"
-          [class.active]="rlaCategorias.isActive || rlaRepuestos.isActive"
+          [class.active]="
+            rlaCategorias.isActive || rlaRepuestos.isActive || rlaTrazabilidad.isActive
+          "
         >
           Inventario ▾
         </a>
@@ -90,6 +91,17 @@
               (click)="isMenuOpen = false; isDropdownOpen = false"
             >
               Productos
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/trazabilidad"
+              routerLinkActive="active"
+              #rlaTrazabilidad="routerLinkActive"
+              class="dropdown-link"
+              (click)="isMenuOpen = false; isDropdownOpen = false"
+            >
+              Trazabilidad
             </a>
           </li>
         </ul>

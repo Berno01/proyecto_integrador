@@ -1,0 +1,56 @@
+<div class="productos-container">
+  <div class="page-header">
+    <div class="page-header-text">
+      <h1>Trazabilidad de Inventario</h1>
+      <p class="page-subtitle">Historial de entradas y salidas de productos</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+    <span>{{ errorMessage }}</span>
+    <button class="btn btn-retry" (click)="cargarTrazabilidad()">Reintentar</button>
+  </div>
+
+  <!-- Tabla -->
+  <div *ngIf="!isLoading && !errorMessage" class="table-container">
+    <table *ngIf="trazabilidad.length > 0" class="repuestos-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Producto</th>
+          <th>Tipo de Movimiento</th>
+          <th>Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of trazabilidad">
+          <td>{{ item.fecha | date : 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="nombre-repuesto">{{ item.producto }}</td>
+          <td>
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-entrada': item.tipoMovimiento === 'ENTRADA',
+                'badge-salida': item.tipoMovimiento === 'SALIDA'
+              }"
+            >
+              {{ item.tipoMovimiento }}
+            </span>
+          </td>
+          <td class="text-center">{{ item.cantidad }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="trazabilidad.length === 0" class="empty-state">
+      <p>No hay movimientos registrados.</p>
+    </div>
+  </div>
+</div>

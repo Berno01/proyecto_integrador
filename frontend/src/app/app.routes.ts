@@ -9,6 +9,7 @@ import { CategoriaFormComponent } from './pages/categoria/categoria-form/categor
 import { RepuestoListComponent } from './pages/repuesto/repuesto-list/repuesto-list.component';
 import { RepuestoFormComponent } from './pages/repuesto/repuesto-form/repuesto-form.component';
 import { DashboardFlashComponent } from './pages/dashboard-flash/dashboard-flash.component';
+import { TrazabilidadComponent } from './pages/trazabilidad/trazabilidad.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard-flash', pathMatch: 'full' },
@@ -24,5 +25,6 @@ export const routes: Routes = [
   { path: 'repuestos', component: RepuestoListComponent },
   { path: 'repuesto', component: RepuestoFormComponent },
   { path: 'repuesto/:id', component: RepuestoFormComponent },
+  { path: 'trazabilidad', component: TrazabilidadComponent },
   { path: 'dashboard-flash', component: DashboardFlashComponent },
 ];

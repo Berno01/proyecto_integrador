@@ -1,0 +1,185 @@
+:host {
+  --bg-page: #f3f4f6;
+  --bg-surface: #ffffff;
+  --bg-soft: #f9fafb;
+  --border-soft: #e5e7eb;
+  --border-strong: #d1d5db;
+  --accent: #1f0c1c; /* vino oscuro */
+  --accent-soft: rgba(109, 40, 217, 0.08);
+  --danger: #b91c1c;
+  --danger-soft: rgba(185, 28, 28, 0.06);
+  --success: #15803d;
+  --success-soft: rgba(22, 163, 74, 0.08);
+  --text-main: #111827;
+  --text-muted: #6b7280;
+
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.productos-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 32px;
+  background-color: var(--bg-page);
+}
+
+/* Header de página */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.page-header-text h1 {
+  font-size: 28px;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Alerts / Error */
+.alert {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-error {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid rgba(185, 28, 28, 0.2);
+}
+
+.btn-retry {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Tabla */
+.table-container {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  border: 1px solid var(--border-soft);
+}
+
+.repuestos-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+}
+
+.repuestos-table thead {
+  background: var(--bg-soft);
+}
+
+.repuestos-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  background-color: var(--bg-soft);
+}
+
+.repuestos-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.repuestos-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.repuestos-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.nombre-repuesto {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badge-entrada {
+  background-color: var(--success-soft);
+  color: var(--success);
+}
+
+.badge-salida {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+}
