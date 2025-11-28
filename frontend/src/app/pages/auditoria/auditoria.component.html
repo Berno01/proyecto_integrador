@@ -1,0 +1,168 @@
+<div class="auditoria-container">
+  <div class="header">
+    <h1>🔍 Auditoría de Inventario</h1>
+    <p class="subtitle">Conteo Físico vs Sistema</p>
+  </div>
+
+  <div class="content-grid">
+    <!-- Formulario de auditoría -->
+    <div class="card form-card">
+      <h2>📋 Realizar Auditoría</h2>
+
+      <!-- Selector de producto -->
+      <div class="form-group">
+        <label for="producto">Seleccionar Producto</label>
+        <select 
+          id="producto" 
+          [(ngModel)]="repuestoSeleccionado"
+          (change)="onRepuestoChange()"
+          class="form-control"
+        >
+          <option [ngValue]="null">-- Seleccionar producto --</option>
+          <option *ngFor="let r of repuestos" [ngValue]="r">
+            {{ r.nombreRepuesto }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Información del sistema -->
+      <div class="info-box" *ngIf="repuestoSeleccionado">
+        <div class="info-row">
+          <span class="info-label">📦 Stock en Sistema:</span>
+          <span class="info-value system-stock">{{ repuestoSeleccionado.stockActual }} unidades</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">💵 Costo Unitario:</span>
+          <span class="info-value">Bs. {{ repuestoSeleccionado.costoRepuesto | number:'1.2-2' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">🏷️ Precio Sugerido:</span>
+          <span class="info-value">Bs. {{ repuestoSeleccionado.precioSugerido | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Conteo físico -->
+      <div class="form-group" *ngIf="repuestoSeleccionado">
+        <label for="conteo">Conteo Físico</label>
+        <input 
+          type="number" 
+          id="conteo" 
+          [(ngModel)]="conteoFisico"
+          class="form-control conteo-input"
+          placeholder="Ingrese cantidad contada"
+          min="0"
+        >
+        <small>Ingrese la cantidad real contada físicamente</small>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-group" *ngIf="repuestoSeleccionado">
+        <label for="observaciones">Observaciones (opcional)</label>
+        <textarea 
+          id="observaciones" 
+          [(ngModel)]="observaciones"
+          class="form-control"
+          rows="3"
+          placeholder="Notas adicionales sobre la auditoría..."
+        ></textarea>
+      </div>
+
+      <div class="button-group" *ngIf="repuestoSeleccionado">
+        <button class="btn btn-primary" (click)="realizarAuditoria()">
+          ✔️ Comparar
+        </button>
+        <button class="btn btn-secondary" (click)="limpiar()">
+          🗑️ Limpiar
+        </button>
+      </div>
+
+      <!-- Resultado -->
+      <div class="resultado-box" *ngIf="resultado" [ngClass]="resultado.tipo">
+        <div class="resultado-icon">
+          {{ resultado.tipo === 'faltante' ? '📉' : (resultado.tipo === 'sobrante' ? '📈' : '✅') }}
+        </div>
+        <div class="resultado-content">
+          <h3>
+            <ng-container *ngIf="resultado.tipo === 'correcto'">
+              ¡Inventario Correcto!
+            </ng-container>
+            <ng-container *ngIf="resultado.tipo === 'faltante'">
+              Faltante Detectado
+            </ng-container>
+            <ng-container *ngIf="resultado.tipo === 'sobrante'">
+              Sobrante Detectado
+            </ng-container>
+          </h3>
+          <div class="resultado-detalle">
+            <p class="diferencia">
+              Diferencia: <strong>{{ resultado.diferencia > 0 ? '+' : '' }}{{ resultado.diferencia }} unidades</strong>
+            </p>
+            <p class="valor" *ngIf="resultado.tipo !== 'correcto'">
+              Valor: <strong>Bs. {{ resultado.valorDiferencia | number:'1.2-2' }}</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de auditorías -->
+    <div class="card historial-card">
+      <h2>📜 Historial de Auditorías (Sesión)</h2>
+
+      <div class="empty-state" *ngIf="historialAuditorias.length === 0">
+        <span class="empty-icon">📋</span>
+        <p>No hay auditorías registradas en esta sesión</p>
+        <small>Las auditorías aparecerán aquí después de realizar comparaciones</small>
+      </div>
+
+      <div class="historial-list" *ngIf="historialAuditorias.length > 0">
+        <div 
+          class="historial-item" 
+          *ngFor="let item of historialAuditorias"
+          [style.border-left-color]="getColorTipo(item.tipo)"
+        >
+          <div class="historial-header">
+            <span class="historial-icon">{{ getIconoTipo(item.tipo) }}</span>
+            <span class="historial-producto">{{ item.producto }}</span>
+            <span class="historial-fecha">{{ item.fecha | date:'short' }}</span>
+          </div>
+          <div class="historial-body">
+            <div class="historial-row">
+              <span>Sistema: {{ item.stockSistema }}</span>
+              <span>Conteo: {{ item.conteoFisico }}</span>
+              <span class="historial-diferencia" [ngClass]="item.tipo">
+                {{ item.diferencia > 0 ? '+' : '' }}{{ item.diferencia }}
+              </span>
+            </div>
+            <div class="historial-valor" *ngIf="item.tipo !== 'correcto'">
+              Valor: Bs. {{ item.valorDiferencia | number:'1.2-2' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="resumen-box" *ngIf="historialAuditorias.length > 0">
+        <h4>📊 Resumen de Sesión</h4>
+        <div class="resumen-grid">
+          <div class="resumen-item">
+            <span class="resumen-valor">{{ historialAuditorias.length }}</span>
+            <span class="resumen-label">Auditorías</span>
+          </div>
+          <div class="resumen-item faltantes">
+            <span class="resumen-valor">{{ contarFaltantes() }}</span>
+            <span class="resumen-label">Faltantes</span>
+          </div>
+          <div class="resumen-item sobrantes">
+            <span class="resumen-valor">{{ contarSobrantes() }}</span>
+            <span class="resumen-label">Sobrantes</span>
+          </div>
+          <div class="resumen-item correctos">
+            <span class="resumen-valor">{{ contarCorrectos() }}</span>
+            <span class="resumen-label">Correctos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

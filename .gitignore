@@ -1,0 +1,16 @@
+# Archivos sueltos que no deben subirse
+*.sql
+*.pdf
+package-lock.json
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

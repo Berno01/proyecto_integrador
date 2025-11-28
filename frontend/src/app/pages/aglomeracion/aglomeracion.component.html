@@ -1,0 +1,289 @@
+<div class="aglomeracion-container">
+  <div class="header">
+    <h1>📦 Aglomeración de Pedidos</h1>
+    <p class="subtitle">Pedidos sugeridos agrupados por proveedor - Sistema P (Periódico)</p>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen-cards">
+    <div class="resumen-card">
+      <span class="resumen-icon">🏢</span>
+      <div class="resumen-info">
+        <span class="resumen-valor">{{ gruposProveedores.length }}</span>
+        <span class="resumen-label">Proveedores</span>
+      </div>
+    </div>
+    <div class="resumen-card">
+      <span class="resumen-icon">📋</span>
+      <div class="resumen-info">
+        <span class="resumen-valor">{{ getTotalProductos() }}</span>
+        <span class="resumen-label">Productos a Ordenar</span>
+      </div>
+    </div>
+    <div class="resumen-card urgente">
+      <span class="resumen-icon">🔴</span>
+      <div class="resumen-info">
+        <span class="resumen-valor">{{ getPedidosAlta() }}</span>
+        <span class="resumen-label">Prioridad Alta</span>
+      </div>
+    </div>
+    <div class="resumen-card">
+      <span class="resumen-icon">💰</span>
+      <div class="resumen-info">
+        <span class="resumen-valor">Bs. {{ getTotalValor() | number:'1.0-0' }}</span>
+        <span class="resumen-label">Valor Estimado Total</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grupos de proveedores -->
+  <div class="proveedores-grid">
+    <div class="proveedor-card" *ngFor="let grupo of gruposProveedores">
+      <div class="proveedor-header">
+        <div class="proveedor-info">
+          <h2>{{ grupo.proveedor }}</h2>
+          <div class="proveedor-contacto">
+            <span>👤 {{ grupo.contacto }}</span>
+            <span>📞 {{ grupo.telefono }}</span>
+            <span>✉️ {{ grupo.email }}</span>
+          </div>
+        </div>
+        <div class="proveedor-valor">
+          <span class="valor-label">Valor Estimado</span>
+          <span class="valor-monto">Bs. {{ grupo.valorTotal | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <table class="pedidos-table">
+        <thead>
+          <tr>
+            <th>Prioridad</th>
+            <th>Producto</th>
+            <th>Stock Actual</th>
+            <th>ROP</th>
+            <th>Cantidad Sugerida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pedido of grupo.pedidos" [class]="'prioridad-' + pedido.prioridad">
+            <td class="prioridad-cell">
+              <span class="prioridad-badge" [class]="pedido.prioridad">
+                {{ getIconoPrioridad(pedido.prioridad) }} {{ pedido.prioridad | uppercase }}
+              </span>
+            </td>
+            <td class="producto-cell">{{ pedido.producto }}</td>
+            <td class="stock-cell">
+              <span class="stock-actual" [class.critico]="pedido.stockActual < pedido.rop">
+                {{ pedido.stockActual }}
+              </span>
+            </td>
+            <td class="rop-cell">{{ pedido.rop }}</td>
+            <td class="cantidad-cell">
+              <strong>{{ pedido.cantidadSugerida }}</strong> {{ pedido.unidad }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="proveedor-actions">
+        <button class="btn btn-primary" (click)="abrirModalOrden(grupo)">
+          📧 Generar Orden
+        </button>
+        <button class="btn btn-secondary" (click)="abrirModalDetalle(grupo)">
+          📄 Ver Detalle
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="mostrarModal" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Generar Orden -->
+      <ng-container *ngIf="modalTipo === 'orden' && proveedorSeleccionado">
+        <div class="modal-header">
+          <h2>📧 Generar Orden de Compra</h2>
+          <button class="modal-close" (click)="cerrarModal()">✕</button>
+        </div>
+        
+        <div class="modal-body" *ngIf="!ordenGenerada">
+          <div class="orden-preview">
+            <div class="orden-header-info">
+              <div class="orden-numero">
+                <strong>Orden #:</strong> {{ getNumeroOrden() }}
+              </div>
+              <div class="orden-fecha">
+                <strong>Fecha:</strong> {{ getFechaActual() }}
+              </div>
+            </div>
+            
+            <div class="orden-proveedor">
+              <h3>Proveedor</h3>
+              <p><strong>{{ proveedorSeleccionado.proveedor }}</strong></p>
+              <p>👤 {{ proveedorSeleccionado.contacto }}</p>
+              <p>📞 {{ proveedorSeleccionado.telefono }}</p>
+              <p>✉️ {{ proveedorSeleccionado.email }}</p>
+            </div>
+
+            <table class="orden-items">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>P. Unit.</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of proveedorSeleccionado.pedidos">
+                  <td>{{ p.producto }}</td>
+                  <td>{{ p.cantidadSugerida }} {{ p.unidad }}</td>
+                  <td>Bs. {{ p.costoUnitario | number:'1.2-2' }}</td>
+                  <td>Bs. {{ calcularSubtotal(p) | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3"><strong>TOTAL</strong></td>
+                  <td><strong>Bs. {{ proveedorSeleccionado.valorTotal | number:'1.2-2' }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-body orden-generada" *ngIf="ordenGenerada">
+          <div class="success-message">
+            <span class="success-icon">✅</span>
+            <h3>¡Orden Generada Exitosamente!</h3>
+            <p>La orden de compra ha sido creada y enviada a:</p>
+            <p class="email-destino">{{ proveedorSeleccionado.email }}</p>
+            <div class="orden-resumen">
+              <p><strong>Proveedor:</strong> {{ proveedorSeleccionado.proveedor }}</p>
+              <p><strong>Total:</strong> Bs. {{ proveedorSeleccionado.valorTotal | number:'1.2-2' }}</p>
+              <p><strong>Productos:</strong> {{ proveedorSeleccionado.pedidos.length }} items</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+          <button class="btn btn-primary" *ngIf="!ordenGenerada" (click)="generarOrden()">
+            ✉️ Enviar Orden
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Modal Ver Detalle -->
+      <ng-container *ngIf="modalTipo === 'detalle' && proveedorSeleccionado">
+        <div class="modal-header detalle">
+          <h2>📄 Detalle del Proveedor</h2>
+          <button class="modal-close" (click)="cerrarModal()">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="detalle-proveedor">
+            <div class="detalle-section">
+              <h3>🏢 Información del Proveedor</h3>
+              <div class="detalle-grid">
+                <div class="detalle-item">
+                  <span class="label">Empresa:</span>
+                  <span class="value">{{ proveedorSeleccionado.proveedor }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span class="label">Contacto:</span>
+                  <span class="value">{{ proveedorSeleccionado.contacto }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span class="label">Teléfono:</span>
+                  <span class="value">{{ proveedorSeleccionado.telefono }}</span>
+                </div>
+                <div class="detalle-item">
+                  <span class="label">Email:</span>
+                  <span class="value">{{ proveedorSeleccionado.email }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detalle-section">
+              <h3>📦 Productos a Ordenar</h3>
+              <div class="productos-detalle">
+                <div class="producto-card" *ngFor="let p of proveedorSeleccionado.pedidos">
+                  <div class="producto-header">
+                    <span class="prioridad-badge" [class]="p.prioridad">
+                      {{ getIconoPrioridad(p.prioridad) }}
+                    </span>
+                    <strong>{{ p.producto }}</strong>
+                  </div>
+                  <div class="producto-stats">
+                    <div class="stat">
+                      <span class="stat-label">Stock Actual</span>
+                      <span class="stat-value" [class.critico]="p.stockActual < p.rop">{{ p.stockActual }}</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-label">ROP</span>
+                      <span class="stat-value">{{ p.rop }}</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-label">A Pedir</span>
+                      <span class="stat-value sugerido">{{ p.cantidadSugerida }} {{ p.unidad }}</span>
+                    </div>
+                    <div class="stat">
+                      <span class="stat-label">Costo</span>
+                      <span class="stat-value">Bs. {{ calcularSubtotal(p) | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detalle-section resumen">
+              <h3>💰 Resumen</h3>
+              <div class="resumen-final">
+                <div class="resumen-row">
+                  <span>Total Productos:</span>
+                  <strong>{{ proveedorSeleccionado.pedidos.length }}</strong>
+                </div>
+                <div class="resumen-row">
+                  <span>Prioridad Alta:</span>
+                  <strong class="alta">{{ contarPrioridadAlta(proveedorSeleccionado) }}</strong>
+                </div>
+                <div class="resumen-row total">
+                  <span>Valor Total Estimado:</span>
+                  <strong>Bs. {{ proveedorSeleccionado.valorTotal | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+          <button class="btn btn-primary" (click)="modalTipo = 'orden'">
+            📧 Generar Orden
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Nota informativa -->
+  <div class="info-note">
+    <h3>ℹ️ Principio de Aglomeración</h3>
+    <p>
+      El principio de aglomeración consiste en <strong>consolidar pedidos</strong> de múltiples productos 
+      del mismo proveedor en una sola orden de compra. Esto permite:
+    </p>
+    <ul>
+      <li>📉 <strong>Reducir costos de pedido</strong> (un solo envío, una sola factura)</li>
+      <li>🚛 <strong>Optimizar el transporte</strong> (carga completa vs. múltiples envíos pequeños)</li>
+      <li>💪 <strong>Mejor poder de negociación</strong> (descuentos por volumen)</li>
+      <li>📊 <strong>Simplificar la administración</strong> (menos órdenes que gestionar)</li>
+    </ul>
+    <p class="note-footer">
+      Este listado muestra productos que han alcanzado o están por debajo de su punto de reorden (ROP),
+      agrupados por proveedor para facilitar la generación de órdenes consolidadas.
+    </p>
+  </div>
+</div>

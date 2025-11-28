@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
 export class NavbarComponent {
   isMenuOpen = false;
   isDropdownOpen = false;
+  isDropdownOpen2 = false;
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
@@ -23,5 +24,13 @@ export class NavbarComponent {
 
   closeDropdown() {
     this.isDropdownOpen = false;
+  }
+
+  toggleDropdown2() {
+    this.isDropdownOpen2 = !this.isDropdownOpen2;
+  }
+
+  closeDropdown2() {
+    this.isDropdownOpen2 = false;
   }
 }
