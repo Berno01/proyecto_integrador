@@ -1,0 +1,223 @@
+<div class="eoq-container">
+  <div class="header">
+    <h1>📊 Calculadora EOQ</h1>
+    <p class="subtitle">Cantidad Económica de Pedido - Sistema Q (Continuo)</p>
+  </div>
+
+  <div class="content-grid">
+    <!-- Formulario de entrada -->
+    <div class="card form-card">
+      <h2>📝 Datos de entrada</h2>
+      
+      <!-- Selector de producto -->
+      <div class="form-group">
+        <label for="producto">Producto (opcional)</label>
+        <select 
+          id="producto" 
+          [(ngModel)]="repuestoSeleccionado"
+          (change)="onRepuestoChange()"
+          class="form-control"
+        >
+          <option [ngValue]="null">-- Seleccionar producto --</option>
+          <option *ngFor="let r of repuestos" [ngValue]="r">
+            {{ r.nombreRepuesto }} (Stock: {{ r.stockActual }})
+          </option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="demanda">Demanda Anual (D)</label>
+          <input 
+            type="number" 
+            id="demanda" 
+            [(ngModel)]="demandaAnual"
+            class="form-control"
+            placeholder="Unidades/año"
+            min="0"
+          >
+          <small>Unidades vendidas por año</small>
+        </div>
+
+        <div class="form-group">
+          <label for="costoPedido">Costo por Pedido (S)</label>
+          <input 
+            type="number" 
+            id="costoPedido" 
+            [(ngModel)]="costoPedido"
+            class="form-control"
+            placeholder="Bs."
+            min="0"
+            step="0.01"
+          >
+          <small>Costo fijo de ordenar</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="costoMantener">Costo de Mantener (H)</label>
+          <input 
+            type="number" 
+            id="costoMantener" 
+            [(ngModel)]="costoMantener"
+            class="form-control"
+            placeholder="Bs./unidad/año"
+            min="0"
+            step="0.01"
+          >
+          <small>Costo anual por unidad en inventario</small>
+        </div>
+
+        <div class="form-group">
+          <label for="leadTime">Tiempo de Entrega (L)</label>
+          <input 
+            type="number" 
+            id="leadTime" 
+            [(ngModel)]="leadTime"
+            class="form-control"
+            placeholder="Días"
+            min="0"
+          >
+          <small>Lead time en días</small>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <h3>⚠️ Incertidumbre (Stock de Seguridad)</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nivelServicio">Nivel de Servicio</label>
+          <select 
+            id="nivelServicio" 
+            [(ngModel)]="nivelServicio"
+            class="form-control"
+          >
+            <option [value]="90">90% (Z = 1.28)</option>
+            <option [value]="95">95% (Z = 1.65)</option>
+            <option [value]="99">99% (Z = 2.33)</option>
+          </select>
+          <small>Probabilidad de no tener faltantes</small>
+        </div>
+
+        <div class="form-group">
+          <label for="desviacion">Desv. Estándar Demanda Diaria (σ)</label>
+          <input 
+            type="number" 
+            id="desviacion" 
+            [(ngModel)]="desviacionDemanda"
+            class="form-control"
+            placeholder="Unidades/día"
+            min="0"
+            step="0.1"
+          >
+          <small>Variabilidad de la demanda diaria</small>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-primary" (click)="calcularEOQ()">
+          🧮 Calcular EOQ
+        </button>
+        <button class="btn btn-secondary" (click)="limpiar()">
+          🗑️ Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card results-card" *ngIf="mostrarResultados && resultado">
+      <h2>📈 Resultados del Cálculo</h2>
+      
+      <div class="result-item highlight">
+        <span class="result-label">EOQ (Q*)</span>
+        <span class="result-value">{{ resultado.eoq }} unidades</span>
+        <small>Cantidad óptima a ordenar cada vez</small>
+      </div>
+
+      <div class="results-grid">
+        <div class="result-item">
+          <span class="result-label">Pedidos por Año (N)</span>
+          <span class="result-value">{{ resultado.numeroPedidos }}</span>
+        </div>
+
+        <div class="result-item">
+          <span class="result-label">Tiempo entre Pedidos (T)</span>
+          <span class="result-value">{{ resultado.tiempoEntrePedidos }} días</span>
+        </div>
+
+        <div class="result-item">
+          <span class="result-label">Demanda durante L.T.</span>
+          <span class="result-value">{{ resultado.demandaLeadTime }} unidades</span>
+        </div>
+
+        <div class="result-item">
+          <span class="result-label">Stock de Seguridad (SS)</span>
+          <span class="result-value">{{ resultado.stockSeguridad }} unidades</span>
+        </div>
+      </div>
+
+      <div class="result-item highlight rop">
+        <span class="result-label">🎯 Punto de Reorden (ROP)</span>
+        <span class="result-value">{{ resultado.rop }} unidades</span>
+        <small>Ordenar cuando el inventario llegue a este nivel</small>
+      </div>
+
+      <div class="result-item cost">
+        <span class="result-label">💰 Costo Total Anual</span>
+        <span class="result-value">Bs. {{ resultado.costoTotal | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Fórmulas utilizadas -->
+      <div class="formulas-section">
+        <h3>📚 Fórmulas Utilizadas</h3>
+        <div class="formula">
+          <code>Q* = √(2DS/H)</code>
+          <span>Cantidad Económica de Pedido</span>
+        </div>
+        <div class="formula">
+          <code>N = D/Q*</code>
+          <span>Número de pedidos por año</span>
+        </div>
+        <div class="formula">
+          <code>T = (Q*/D) × 365</code>
+          <span>Tiempo entre pedidos (días)</span>
+        </div>
+        <div class="formula">
+          <code>ROP = DL + SS</code>
+          <span>Punto de Reorden</span>
+        </div>
+        <div class="formula">
+          <code>SS = Z × σ × √L</code>
+          <span>Stock de Seguridad</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info cuando no hay resultados -->
+    <div class="card info-card" *ngIf="!mostrarResultados">
+      <h2>ℹ️ Modelo EOQ - Sistema Q</h2>
+      <p>El modelo EOQ (Economic Order Quantity) determina la cantidad óptima de pedido que minimiza los costos totales de inventario.</p>
+      
+      <div class="info-section">
+        <h4>📌 Sistema Q (Cantidad Fija)</h4>
+        <ul>
+          <li>Se monitorea el inventario continuamente</li>
+          <li>Se ordena cuando el stock llega al ROP</li>
+          <li>La cantidad de pedido es siempre Q* (EOQ)</li>
+        </ul>
+      </div>
+
+      <div class="info-section">
+        <h4>📊 Variables requeridas</h4>
+        <ul>
+          <li><strong>D</strong> - Demanda anual</li>
+          <li><strong>S</strong> - Costo por pedido</li>
+          <li><strong>H</strong> - Costo de mantener inventario</li>
+          <li><strong>L</strong> - Lead time (tiempo de entrega)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

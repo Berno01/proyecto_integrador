@@ -10,6 +10,9 @@ import { RepuestoListComponent } from './pages/repuesto/repuesto-list/repuesto-l
 import { RepuestoFormComponent } from './pages/repuesto/repuesto-form/repuesto-form.component';
 import { DashboardFlashComponent } from './pages/dashboard-flash/dashboard-flash.component';
 import { TrazabilidadComponent } from './pages/trazabilidad/trazabilidad.component';
+import { CalculadoraEoqComponent } from './pages/calculadora-eoq/calculadora-eoq.component';
+import { AuditoriaComponent } from './pages/auditoria/auditoria.component';
+import { AglomeracionComponent } from './pages/aglomeracion/aglomeracion.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard-flash', pathMatch: 'full' },
@@ -27,4 +30,7 @@ export const routes: Routes = [
   { path: 'repuesto/:id', component: RepuestoFormComponent },
   { path: 'trazabilidad', component: TrazabilidadComponent },
   { path: 'dashboard-flash', component: DashboardFlashComponent },
+  { path: 'calculadora-eoq', component: CalculadoraEoqComponent },
+  { path: 'auditoria', component: AuditoriaComponent },
+  { path: 'aglomeracion', component: AglomeracionComponent },
 ];

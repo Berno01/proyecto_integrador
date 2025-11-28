@@ -106,6 +106,57 @@
           </li>
         </ul>
       </li>
+
+      <!-- Dropdown Operaciones -->
+      <li
+        class="navbar-item dropdown"
+        (mouseenter)="isDropdownOpen2 = true"
+        (mouseleave)="isDropdownOpen2 = false"
+      >
+        <a
+          class="navbar-link dropdown-toggle"
+          [class.active]="
+            rlaEoq.isActive || rlaAuditoria.isActive || rlaAglomeracion.isActive
+          "
+        >
+          Operaciones ▾
+        </a>
+        <ul class="dropdown-menu" [class.show]="isDropdownOpen2">
+          <li>
+            <a
+              routerLink="/calculadora-eoq"
+              routerLinkActive="active"
+              #rlaEoq="routerLinkActive"
+              class="dropdown-link"
+              (click)="isMenuOpen = false; isDropdownOpen2 = false"
+            >
+              📊 Calculadora EOQ
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/auditoria"
+              routerLinkActive="active"
+              #rlaAuditoria="routerLinkActive"
+              class="dropdown-link"
+              (click)="isMenuOpen = false; isDropdownOpen2 = false"
+            >
+              🔍 Auditoría
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/aglomeracion"
+              routerLinkActive="active"
+              #rlaAglomeracion="routerLinkActive"
+              class="dropdown-link"
+              (click)="isMenuOpen = false; isDropdownOpen2 = false"
+            >
+              📦 Aglomeración
+            </a>
+          </li>
+        </ul>
+      </li>
     </ul>
   </div>
 </nav>
