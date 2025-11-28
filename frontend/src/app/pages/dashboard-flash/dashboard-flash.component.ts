@@ -2,33 +2,49 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
+/* ----------------- Interfaces de datos ------------------ */
+
 interface DashboardFlash {
   total_ganancia: number;
   ganancia_socia: number;
 }
 
-interface AbcRow {
-  idRepuesto: number;
-  nombreProducto: string;
-  cantidadVendida: number;
-  vecesVendido: number;
-  precioSugerido: number;
-  valorTotal: number;
-  abcValor: 'A' | 'B' | 'C' | '-';
-  abcRotacion: 'A' | 'B' | 'C' | '-';
+/**
+ * Forma cruda que puede devolver el backend.
+ * Aceptamos camelCase y snake_case para no depender
+ * de cómo se llamen exactamente las propiedades.
+ */
+interface RopAlertApi {
+  idRepuesto?: number;
+  id_repuesto?: number;
+
+  nombreRepuesto?: string;
+  nombre_repuesto?: string;
+
+  stockActual?: number;
+  stock_actual?: number;
+
+  rop?: number;
+  ropCalculado?: number;
+  rop_calculado?: number;
+
+  stockSeguridad?: number;
+  stock_seguridad?: number;
+
+  tiempoEntrega?: number;
+  tiempo_entrega?: number;
 }
 
-interface RopAlertRow {
-  idRepuesto: number;
-  nombreProducto: string;
+/**
+ * Modelo ya normalizado para la vista.
+ */
+interface RopAlertView {
+  id: number;
+  producto: string;
   stockActual: number;
-  tiempoEntrega: number;
+  rop: number;
   stockSeguridad: number;
-  demandaAnual: number;
-  demandaDiaria: number;
-  ropCalculado: number;
-  diferencia: number;
-  estado: 'HACER_PEDIDO' | 'OK';
+  tiempoEntrega: number;
 }
 
 @Component({
@@ -37,16 +53,19 @@ interface RopAlertRow {
   imports: [CommonModule],
   template: `
     <div class="dashboard-container">
-      <!-- ENCABEZADO -->
-      <div class="header">
-        <div class="badge">Panel financiero · Inventarios</div>
+      <!-- Migas de pan / contexto -->
+      <div class="breadcrumb">Panel financiero · inventarios</div>
+
+      <!-- Encabezado principal -->
+      <header class="header">
+        <div class="badge">Panel financiero</div>
         <h1 class="title">Resumen de desempeño</h1>
         <p class="subtitle">Bodega Barbacana · Ventas, stock y alertas</p>
-      </div>
+      </header>
 
-      <!-- TARJETAS DE GANANCIAS -->
-      <div class="cards-container" *ngIf="!loading && dashboardData">
-        <div class="card card-main">
+      <!-- Tarjetas de ganancias -->
+      <section class="cards-container" *ngIf="!loading && dashboardData; else loadingBlock">
+        <article class="card card-main">
           <div class="card-header">
             <div class="icon-pill">
               <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,9 +85,9 @@ interface RopAlertRow {
           <p class="card-value">
             {{ dashboardData.total_ganancia | currency : 'BOB' : 'symbol-narrow' : '1.2-2' }}
           </p>
-        </div>
+        </article>
 
-        <div class="card card-secondary">
+        <article class="card card-secondary">
           <div class="card-header">
             <div class="icon-pill">
               <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,132 +107,96 @@ interface RopAlertRow {
           <p class="card-value">
             {{ dashboardData.ganancia_socia | currency : 'BOB' : 'symbol-narrow' : '1.2-2' }}
           </p>
-        </div>
-      </div>
+        </article>
+      </section>
 
-      <!-- LOADING GENERAL -->
-      <div class="loading-section" *ngIf="loading">
-        <div class="spinner"></div>
-        <p>Cargando datos financieros...</p>
-      </div>
+      <ng-template #loadingBlock>
+        <section class="loading-section">
+          <div class="spinner"></div>
+          <p>Cargando datos financieros...</p>
+        </section>
+      </ng-template>
 
-      <!-- INVENTARIO ANALÍTICO -->
+      <!-- Sección de inventario / ROP -->
       <section class="inventory-section">
-        <div class="inventory-header">
-          <h2>Inventario analítico</h2>
-          <p>Clasificación ABC por valor y rotación, y alertas de punto de reorden (ROP).</p>
-        </div>
+        <header class="inventory-header">
+          <h2 class="inventory-title">Inventario analítico</h2>
+          <p class="inventory-subtitle">
+            Alertas de punto de reorden basadas en stock actual, demanda estimada y lead time.
+          </p>
+        </header>
 
-        <div class="inventory-grid">
-          <!-- ABC -->
-          <div class="inventory-card">
-            <div class="inventory-card-header">
-              <h3>Clasificación ABC del inventario</h3>
-              <p>Basado en valor económico y veces que se vendió cada producto.</p>
-            </div>
-
-            <div *ngIf="abcLoading" class="mini-loading">
-              <div class="mini-spinner"></div>
-              <span>Cargando clasificación ABC...</span>
-            </div>
-
-            <div *ngIf="!abcLoading && abcError" class="mini-error">
-              {{ abcError }}
-            </div>
-
-            <div class="table-wrapper" *ngIf="!abcLoading && !abcError">
-              <table class="abc-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Producto</th>
-                    <th class="align-right">Cant. vendida</th>
-                    <th class="align-right">Veces vendido</th>
-                    <th class="align-right">Precio sugerido</th>
-                    <th class="align-right">Valor total</th>
-                    <th class="align-center">ABC por valor</th>
-                    <th class="align-center">ABC por rotación</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let row of abcData">
-                    <td>{{ row.idRepuesto }}</td>
-                    <td class="product-name">{{ row.nombreProducto }}</td>
-                    <td class="align-right">{{ row.cantidadVendida }}</td>
-                    <td class="align-right">{{ row.vecesVendido }}</td>
-                    <td class="align-right">
-                      {{ row.precioSugerido | currency : 'BOB' : 'symbol-narrow' : '1.2-2' }}
-                    </td>
-                    <td class="align-right">
-                      {{ row.valorTotal | currency : 'BOB' : 'symbol-narrow' : '1.2-2' }}
-                    </td>
-                    <td class="align-center">
-                      <span [ngClass]="badgeClass(row.abcValor)">
-                        {{ row.abcValor }}
-                      </span>
-                    </td>
-                    <td class="align-center">
-                      <span [ngClass]="badgeClass(row.abcRotacion)">
-                        {{ row.abcRotacion }}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr *ngIf="abcData.length === 0">
-                    <td colspan="8" class="empty-row">
-                      No hay datos suficientes de ventas para calcular el ABC.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ROP -->
-          <div class="inventory-card rop-card">
-            <div class="inventory-card-header">
-              <h3>Alertas de punto de reorden (ROP)</h3>
-              <p>
-                Cuando el stock actual cae por debajo del ROP, se marca como
-                <strong>"Hacer pedido"</strong>.
-              </p>
-            </div>
-
-            <div *ngIf="ropLoading" class="mini-loading">
-              <div class="mini-spinner"></div>
-              <span>Cargando alertas de reorden...</span>
-            </div>
-
-            <div *ngIf="!ropLoading && ropError" class="mini-error">
-              {{ ropError }}
-            </div>
-
-            <div class="alert-list" *ngIf="!ropLoading && !ropError">
-              <div *ngIf="ropAlerts.length === 0" class="empty-alerts">
-                <p>No hay productos con stock por debajo del punto de reorden.</p>
-              </div>
-
-              <div *ngFor="let alert of ropAlerts" class="alert-item">
-                <div class="alert-main">
-                  <h4>{{ alert.nombreProducto }}</h4>
-                  <p>
-                    Stock actual:
-                    <strong>{{ alert.stockActual }}</strong>
-                    · ROP:
-                    <strong>{{ alert.ropCalculado | number : '1.0-0' }}</strong>
-                  </p>
-                  <p class="alert-secondary">
-                    Demanda diaria aprox.:
-                    <strong>{{ alert.demandaDiaria | number : '1.1-1' }}</strong>
-                    · Seguridad:
-                    <strong>{{ alert.stockSeguridad }}</strong>
-                  </p>
-                </div>
-                <div class="alert-badge">
-                  Hacer pedido
-                </div>
+        <div class="rop-panel">
+          <div class="rop-panel-header">
+            <div class="rop-header-left">
+              <div class="rop-icon-circle">📦</div>
+              <div>
+                <h3 class="rop-title">Alertas de punto de reorden (ROP)</h3>
+                <p class="rop-subtitle">
+                  Cuando el stock actual cae por debajo del ROP, se marca como
+                  <strong>"Hacer pedido"</strong>.
+                </p>
               </div>
             </div>
           </div>
+
+          <!-- Loading ROP -->
+          <div class="rop-loading" *ngIf="loadingRop">
+            <div class="spinner small"></div>
+            <span>Cargando alertas de reorden...</span>
+          </div>
+
+          <!-- Error ROP -->
+          <div class="rop-error-banner" *ngIf="ropError">
+            {{ ropError }}
+          </div>
+
+          <!-- Contenido de alertas -->
+          <ng-container *ngIf="!loadingRop && !ropError">
+            <ng-container *ngIf="ropAlerts.length > 0; else ropEmpty">
+              <article class="rop-alert-card" *ngFor="let alerta of ropAlerts">
+                <div class="rop-alert-header">
+                  <div>
+                    <h4 class="rop-product-name">{{ alerta.producto }}</h4>
+                    <p class="rop-product-sub">Repuesto con stock por debajo del ROP.</p>
+                  </div>
+                  <button class="btn-danger">Hacer pedido</button>
+                </div>
+
+                <div class="rop-metrics">
+                  <div class="metric">
+                    <span class="metric-label">Stock actual</span>
+                    <span class="metric-value">{{ alerta.stockActual }}</span>
+                  </div>
+
+                  <div class="metric">
+                    <span class="metric-label">ROP</span>
+                    <span class="metric-value">
+                      {{ alerta.rop | number : '1.0-2' }}
+                    </span>
+                  </div>
+
+                  <div class="metric">
+                    <span class="metric-label">Stock seg.</span>
+                    <span class="metric-value">{{ alerta.stockSeguridad }}</span>
+                  </div>
+
+                  <div class="metric">
+                    <span class="metric-label">Lead time</span>
+                    <span class="metric-value">{{ alerta.tiempoEntrega }} días</span>
+                  </div>
+                </div>
+              </article>
+            </ng-container>
+
+            <!-- Sin alertas -->
+            <ng-template #ropEmpty>
+              <div class="rop-empty-banner">
+                No hay alertas activas de reorden. El stock está por encima del ROP para
+                todos los productos configurados.
+              </div>
+            </ng-template>
+          </ng-container>
         </div>
       </section>
     </div>
@@ -226,26 +209,38 @@ interface RopAlertRow {
         --card-bg: #ffffff;
         --border-soft: #e5e7eb;
         --border-strong: #d1d5db;
-        --accent: #140611;
-        --accent-soft: rgba(20, 6, 17, 0.08);
+        --accent: #140611; /* morado profundo */
+        --accent-soft: rgba(109, 40, 217, 0.08);
         --text-main: #111827;
         --text-muted: #6b7280;
+        --danger: #b91c1c;
+        --danger-soft: #fee2e2;
       }
 
       .dashboard-container {
         min-height: 100vh;
-        padding: 2.5rem 2.5rem 3rem;
+        padding: 2.5rem 1.5rem 3rem;
         background-color: var(--bg-page);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         color: var(--text-main);
         display: flex;
         flex-direction: column;
         gap: 2.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .breadcrumb {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--text-muted);
+        margin-bottom: -0.8rem;
       }
 
       .header {
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
       }
 
       .badge {
@@ -283,14 +278,12 @@ interface RopAlertRow {
       .cards-container {
         display: flex;
         gap: 1.75rem;
-        max-width: 1200px;
-        margin: 0 auto;
         flex-wrap: wrap;
       }
 
       .card {
         flex: 1;
-        min-width: 320px;
+        min-width: 260px;
         background-color: var(--card-bg);
         border-radius: 16px;
         padding: 2rem 2.25rem;
@@ -377,230 +370,189 @@ interface RopAlertRow {
         margin: 0 auto 1rem;
       }
 
-      /* INVENTARIO ANALÍTICO */
+      .spinner.small {
+        width: 26px;
+        height: 26px;
+        border-width: 3px;
+        margin-right: 0.75rem;
+        margin-bottom: 0;
+      }
+
+      /* -------- Inventario / ROP -------- */
 
       .inventory-section {
-        max-width: 1200px;
-        margin: 0 auto;
-      }
-
-      .inventory-header h2 {
-        text-transform: uppercase;
-        letter-spacing: 0.18em;
-        font-size: 1.1rem;
-        margin: 0 0 0.25rem;
-      }
-
-      .inventory-header p {
-        margin: 0 0 1.5rem;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-      }
-
-      .inventory-grid {
-        display: grid;
-        grid-template-columns: 2fr 1.4fr;
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
         gap: 1.5rem;
       }
 
-      .inventory-card {
-        background-color: var(--bg-subtle);
-        border-radius: 18px;
-        padding: 1.75rem 1.75rem 1.5rem;
-        border: 1px solid var(--border-soft);
+      .inventory-header {
+        text-align: left;
       }
 
-      .inventory-card-header h3 {
-        margin: 0 0 0.35rem;
-        font-size: 1rem;
+      .inventory-title {
+        font-size: 1.4rem;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
+        margin: 0 0 0.3rem;
       }
 
-      .inventory-card-header p {
-        margin: 0 0 1rem;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-      }
-
-      .table-wrapper {
-        margin-top: 0.75rem;
-        border-radius: 12px;
-        overflow: hidden;
-        background-color: #ffffff;
-        border: 1px solid var(--border-soft);
-      }
-
-      .abc-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-      }
-
-      .abc-table thead {
-        background-color: #f9fafb;
-      }
-
-      .abc-table th,
-      .abc-table td {
-        padding: 0.65rem 0.9rem;
-        border-bottom: 1px solid #f1f5f9;
-      }
-
-      .abc-table th {
-        font-weight: 600;
-        color: #4b5563;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.7rem;
-      }
-
-      .abc-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-
-      .product-name {
-        font-weight: 500;
-      }
-
-      .align-right {
-        text-align: right;
-      }
-
-      .align-center {
-        text-align: center;
-      }
-
-      .empty-row {
-        text-align: center;
-        padding: 1rem 0.5rem;
-        color: var(--text-muted);
-      }
-
-      .badge-abc {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 32px;
-        padding: 0.15rem 0.55rem;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .badge-a {
-        background-color: #dcfce7;
-        color: #15803d;
-      }
-
-      .badge-b {
-        background-color: #fef9c3;
-        color: #a16207;
-      }
-
-      .badge-c {
-        background-color: #fee2e2;
-        color: #b91c1c;
-      }
-
-      .badge-empty {
-        background-color: #e5e7eb;
-        color: #6b7280;
-      }
-
-      /* MINI LOADING / ERROR */
-
-      .mini-loading,
-      .mini-error {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        margin-top: 0.75rem;
-      }
-
-      .mini-loading {
-        color: var(--text-muted);
-      }
-
-      .mini-error {
-        color: #b91c1c;
-        background-color: #fee2e2;
-        border-radius: 8px;
-        padding: 0.6rem 0.75rem;
-      }
-
-      .mini-spinner {
-        width: 16px;
-        height: 16px;
-        border-radius: 999px;
-        border: 2px solid #e5e7eb;
-        border-top-color: var(--accent);
-        animation: spin 0.8s linear infinite;
-      }
-
-      /* ROP */
-
-      .rop-card {
-        background-color: #f9fafb;
-      }
-
-      .alert-list {
-        margin-top: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .empty-alerts {
+      .inventory-subtitle {
+        margin: 0;
         font-size: 0.9rem;
         color: var(--text-muted);
-        background-color: #ffffff;
-        border-radius: 12px;
-        border: 1px dashed var(--border-soft);
-        padding: 1rem;
       }
 
-      .alert-item {
+      .rop-panel {
+        background-color: var(--bg-subtle);
+        border-radius: 16px;
+        padding: 1.9rem 1.8rem 1.9rem;
+        border: 1px solid var(--border-soft);
+      }
+
+      .rop-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.4rem;
+      }
+
+      .rop-header-left {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 0.9rem 1rem;
-        border: 1px solid #fee2e2;
+        gap: 0.9rem;
       }
 
-      .alert-main h4 {
-        margin: 0 0 0.2rem;
+      .rop-icon-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        background-color: #fefce8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 1px solid #facc15;
+      }
+
+      .rop-title {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .rop-subtitle {
+        margin: 0.2rem 0 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .rop-loading {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        padding: 0.9rem 1.1rem;
+        border-radius: 999px;
+        background-color: #eef2ff;
+        border: 1px solid #e0e7ff;
+      }
+
+      .rop-error-banner {
+        padding: 0.9rem 1.1rem;
+        border-radius: 12px;
+        background-color: var(--danger-soft);
+        color: var(--danger);
+        font-size: 0.9rem;
+        border: 1px solid rgba(185, 28, 28, 0.4);
+      }
+
+      .rop-empty-banner {
+        padding: 1rem 1.3rem;
+        border-radius: 12px;
+        background-color: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+        font-size: 0.9rem;
+      }
+
+      .rop-alert-card {
+        background-color: #ffffff;
+        border-radius: 14px;
+        padding: 1.4rem 1.5rem 1.3rem;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .rop-alert-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .rop-product-name {
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
         font-size: 0.95rem;
       }
 
-      .alert-main p {
-        margin: 0;
-        font-size: 0.8rem;
+      .rop-product-sub {
+        margin: 0.2rem 0 0;
+        font-size: 0.85rem;
         color: var(--text-muted);
       }
 
-      .alert-secondary {
-        margin-top: 0.2rem;
-      }
-
-      .alert-badge {
-        padding: 0.35rem 0.8rem;
+      .btn-danger {
+        padding: 0.55rem 1.1rem;
         border-radius: 999px;
-        background-color: #fee2e2;
-        color: #b91c1c;
+        border: none;
+        background-color: var(--danger);
+        color: #fef2f2;
         font-size: 0.8rem;
-        font-weight: 600;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        white-space: nowrap;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(185, 28, 28, 0.45);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
       }
 
-      /* ANIMACIONES Y RESPONSIVE */
+      .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 40px rgba(185, 28, 28, 0.55);
+        background-color: #991b1b;
+      }
+
+      .rop-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.8rem 1.2rem;
+        font-size: 0.85rem;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+      }
+
+      .metric-label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+      }
+
+      .metric-value {
+        font-weight: 600;
+      }
 
       @keyframes fadeInDown {
         from {
@@ -630,16 +582,6 @@ interface RopAlertRow {
         }
       }
 
-      @media (max-width: 1024px) {
-        .dashboard-container {
-          padding: 2rem 1.5rem 2.5rem;
-        }
-
-        .inventory-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
       @media (max-width: 768px) {
         .dashboard-container {
           padding: 1.75rem 1.25rem 2.25rem;
@@ -666,6 +608,14 @@ interface RopAlertRow {
         .card-value {
           font-size: 2.3rem;
         }
+
+        .rop-metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .inventory-title {
+          font-size: 1.1rem;
+        }
       }
     `,
   ],
@@ -674,38 +624,33 @@ export class DashboardFlashComponent implements OnInit {
   dashboardData: DashboardFlash | null = null;
   loading = true;
 
-  abcData: AbcRow[] = [];
-  abcLoading = true;
-  abcError: string | null = null;
-
-  ropAlerts: RopAlertRow[] = [];
-  ropLoading = true;
+  ropAlerts: RopAlertView[] = [];
+  loadingRop = true;
   ropError: string | null = null;
 
-  private apiFlash = 'http://localhost:8080/api/dashboard/flash-ganancias';
-  private apiAbc = 'http://localhost:8080/api/dashboard/abc1';
-  private apiRop = 'http://localhost:8080/api/dashboard/rop-alertas';
+  private apiUrl = 'http://localhost:8080/api/dashboard/flash-ganancias';
+  private apiRopUrl = 'http://localhost:8080/api/dashboard/rop-alertas';
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
-    this.loadAbcData();
     this.loadRopAlerts();
   }
 
-  // --------- FLASH FINANCIERO ----------
+  /* ------------ Ganancias -------------- */
+
   loadDashboardData(): void {
-    this.loading = true;
-    this.http.get<DashboardFlash>(this.apiFlash).subscribe({
+    this.http.get<DashboardFlash>(this.apiUrl).subscribe({
       next: (data) => {
+        console.log('Datos dashboard:', data);
         this.dashboardData = data;
         this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar datos del dashboard:', error);
         this.loading = false;
-        // Datos de ejemplo para que no quede vacío
+        // Datos de ejemplo por si algo falla
         this.dashboardData = {
           total_ganancia: 0,
           ganancia_socia: 0,
@@ -714,51 +659,40 @@ export class DashboardFlashComponent implements OnInit {
     });
   }
 
-  // --------- ABC ----------
-  loadAbcData(): void {
-    this.abcLoading = true;
-    this.abcError = null;
+  /* -------------- ROP ------------------- */
 
-    this.http.get<AbcRow[]>(this.apiAbc).subscribe({
-      next: (data) => {
-        this.abcData = data || [];
-        this.abcLoading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar ABC:', error);
-        this.abcError = 'No se pudo cargar la clasificación ABC.';
-        this.abcLoading = false;
-      },
-    });
+  /** Normaliza nombres de propiedades desde el backend */
+  private normalizeRop(item: RopAlertApi): RopAlertView {
+    return {
+      id: item.idRepuesto ?? item.id_repuesto ?? 0,
+      producto: item.nombreRepuesto ?? item.nombre_repuesto ?? 'Producto sin nombre',
+      stockActual: item.stockActual ?? item.stock_actual ?? 0,
+      rop:
+        item.ropCalculado ??
+        item.rop_calculado ??
+        item.rop ??
+        0,
+      stockSeguridad: item.stockSeguridad ?? item.stock_seguridad ?? 0,
+      tiempoEntrega: item.tiempoEntrega ?? item.tiempo_entrega ?? 0,
+    };
   }
 
-  // --------- ROP ----------
   loadRopAlerts(): void {
-    this.ropLoading = true;
+    this.loadingRop = true;
     this.ropError = null;
 
-    this.http.get<RopAlertRow[]>(this.apiRop).subscribe({
+    this.http.get<RopAlertApi[]>(this.apiRopUrl).subscribe({
       next: (data) => {
-        this.ropAlerts = data || [];
-        this.ropLoading = false;
+        console.log('Datos crudos ROP:', data);
+        this.ropAlerts = (data || []).map((item) => this.normalizeRop(item));
+        this.loadingRop = false;
       },
       error: (error) => {
         console.error('Error al cargar alertas ROP:', error);
+        this.loadingRop = false;
         this.ropError = 'No se pudieron cargar las alertas de reorden.';
-        this.ropLoading = false;
+        this.ropAlerts = [];
       },
     });
-  }
-
-  // --------- Helpers UI ----------
-  badgeClass(categoria: string | null | undefined): string {
-    if (!categoria || categoria === '-') {
-      return 'badge-abc badge-empty';
-    }
-    const cat = categoria.toUpperCase();
-    if (cat === 'A') return 'badge-abc badge-a';
-    if (cat === 'B') return 'badge-abc badge-b';
-    if (cat === 'C') return 'badge-abc badge-c';
-    return 'badge-abc badge-empty';
   }
 }

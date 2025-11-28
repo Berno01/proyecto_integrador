@@ -13,6 +13,8 @@ import { TrazabilidadComponent } from './pages/trazabilidad/trazabilidad.compone
 import { CalculadoraEoqComponent } from './pages/calculadora-eoq/calculadora-eoq.component';
 import { AuditoriaComponent } from './pages/auditoria/auditoria.component';
 import { AglomeracionComponent } from './pages/aglomeracion/aglomeracion.component';
+import { DashboardAbcComponent } from './pages/dashboard-abc/dashboard-abc.component';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard-flash', pathMatch: 'full' },
@@ -33,4 +35,5 @@ export const routes: Routes = [
   { path: 'calculadora-eoq', component: CalculadoraEoqComponent },
   { path: 'auditoria', component: AuditoriaComponent },
   { path: 'aglomeracion', component: AglomeracionComponent },
+  { path: 'dashboard-abc', component: DashboardAbcComponent },
 ];

@@ -56,7 +56,7 @@
         </a>
       </li>
 
-      <!-- Dropdown Inventario -->
+            <!-- Dropdown Inventario -->
       <li
         class="navbar-item dropdown"
         (mouseenter)="isDropdownOpen = true"
@@ -65,7 +65,10 @@
         <a
           class="navbar-link dropdown-toggle"
           [class.active]="
-            rlaCategorias.isActive || rlaRepuestos.isActive || rlaTrazabilidad.isActive
+            rlaCategorias.isActive ||
+            rlaRepuestos.isActive ||
+            rlaTrazabilidad.isActive ||
+            rlaDashboardAbc.isActive
           "
         >
           Inventario ▾
@@ -95,6 +98,17 @@
           </li>
           <li>
             <a
+              routerLink="/dashboard-abc"
+              routerLinkActive="active"
+              #rlaDashboardAbc="routerLinkActive"
+              class="dropdown-link"
+              (click)="isMenuOpen = false; isDropdownOpen = false"
+            >
+              Dashboard ABC
+            </a>
+          </li>
+          <li>
+            <a
               routerLink="/trazabilidad"
               routerLinkActive="active"
               #rlaTrazabilidad="routerLinkActive"
@@ -106,6 +120,7 @@
           </li>
         </ul>
       </li>
+
 
       <!-- Dropdown Operaciones -->
       <li

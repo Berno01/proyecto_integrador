@@ -1,31 +1,15 @@
 package com.sistemastarija.api_repuestos.dashboard;
 
-/**
- * DTO para la vista ABC de inventario.
- * Representa un producto con sus métricas de valor y rotación.
- */
 public class AbcItemDto {
 
     private int idRepuesto;
     private String nombreRepuesto;
-
-    /** Cantidad total vendida (unidades). */
-    private double cantidadVendida;
-
-    /** Veces que apareció en ventas (número de movimientos). */
+    private long cantidadVendida;
     private long vecesVendido;
-
-    /** Precio sugerido actual del producto. */
     private double precioSugerido;
-
-    /** Valor total = precioSugerido * cantidadVendida. */
     private double valorTotal;
-
-    /** Clasificación ABC por valor (A/B/C). */
-    private String clasificacionValor;
-
-    /** Clasificación ABC por rotación (A/B/C). */
-    private String clasificacionRotacion;
+    private String clasificacionPorValor;
+    private String clasificacionPorRotacion;
 
     public AbcItemDto() {
     }
@@ -46,11 +30,11 @@ public class AbcItemDto {
         this.nombreRepuesto = nombreRepuesto;
     }
 
-    public double getCantidadVendida() {
+    public long getCantidadVendida() {
         return cantidadVendida;
     }
 
-    public void setCantidadVendida(double cantidadVendida) {
+    public void setCantidadVendida(long cantidadVendida) {
         this.cantidadVendida = cantidadVendida;
     }
 
@@ -78,19 +62,19 @@ public class AbcItemDto {
         this.valorTotal = valorTotal;
     }
 
-    public String getClasificacionValor() {
-        return clasificacionValor;
+    public String getClasificacionPorValor() {
+        return clasificacionPorValor;
     }
 
-    public void setClasificacionValor(String clasificacionValor) {
-        this.clasificacionValor = clasificacionValor;
+    public void setClasificacionPorValor(String clasificacionPorValor) {
+        this.clasificacionPorValor = clasificacionPorValor;
     }
 
-    public String getClasificacionRotacion() {
-        return clasificacionRotacion;
+    public String getClasificacionPorRotacion() {
+        return clasificacionPorRotacion;
     }
 
-    public void setClasificacionRotacion(String clasificacionRotacion) {
-        this.clasificacionRotacion = clasificacionRotacion;
+    public void setClasificacionPorRotacion(String clasificacionPorRotacion) {
+        this.clasificacionPorRotacion = clasificacionPorRotacion;
     }
 }
